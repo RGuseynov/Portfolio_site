@@ -93,5 +93,3 @@ def estimation():
 def indisponible():
     return render_template("vide.html") 
 
-
-app.run()
