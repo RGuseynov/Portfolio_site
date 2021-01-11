@@ -1,0 +1,5 @@
+.vscode
+env/
+config.py
+
+data/
