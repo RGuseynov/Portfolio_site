@@ -1,12 +1,10 @@
 import pandas as pd
 import numpy as np
 
-from sklearn import datasets, linear_model,
-from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.model_selection import train_test_split
-from sklearn import preprocessing
-from sklearn.preprocessing import StandardScaler, Normalizer
+from sklearn import linear_model
 from sklearn import metrics
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, Normalizer
 
 
 pd.set_option('display.float_format', lambda x: '%.5f' % x)
@@ -16,8 +14,8 @@ pd.set_option('display.max_rows', 100)
 pd.set_option('display.min_rows', 30)
 
 
-df = pd.read_csv("data/data_clean/appartements.csv", index_col=0, dtype={"code_departement":str, "code_commune":str})
-departement_prices_df = pd.read_csv("data/data_clean/m2_appartement_price_per_departement.csv", index_col=0)
+df = pd.read_csv("data/immobilier/data_clean/appartements.csv", index_col=0, dtype={"code_departement":str, "code_commune":str})
+departement_prices_df = pd.read_csv("data/immobilier/data_clean/m2_appartement_price_per_departement.csv", index_col=0)
 
 df = df.dropna()
 
@@ -47,8 +45,8 @@ Y_predict = lr1.predict(X_test)
 
 print(lr1.coef_)
 print(lr1.intercept_)
-print(mean_squared_error(Y_test, Y_predict))
 
 print(metrics.r2_score(Y_test, Y_predict))
-# print(metrics.explained_variance_score(Y_test, Y_predict))
-
+print(metrics.mean_squared_error(Y_test, Y_predict, squared=False))
+print(metrics.mean_absolute_error(Y_test, Y_predict))
+print(metrics.mean_absolute_percentage_error(Y_test, Y_predict))

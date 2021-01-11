@@ -35,7 +35,7 @@ def appartement_preparation(df: pd.DataFrame) -> pd.DataFrame:
     df["code_departement"] = df["code_departement"].apply(lambda x: x if len(x)>1 else "0"+x)
 
     df = df[["date_mutation", "valeur_fonciere", "surface_reelle_bati", "nombre_pieces_principales", 
-    "code_departement", "code_commune", "longitude", "latitude", "prix_m2"]]
+    "code_departement", "code_postal" ,"code_commune", "longitude", "latitude", "prix_m2"]]
     return df
 
 

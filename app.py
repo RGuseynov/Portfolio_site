@@ -12,7 +12,7 @@ class InferenceForm(FlaskForm):
     """Inference form"""
     surface = IntegerField('Surface', validators=[DataRequired(message="Entrez un nombre"), NumberRange(min=9, max=250)])
     nb_pieces = IntegerField('Nombre de pièces', validators=[DataRequired(message="Entrez un nombre"), NumberRange(min=1, max=50)])
-    code_commune = StringField("Code commune", validators=[DataRequired(), Length(min=4, max=5)])
+    code_commune = StringField("Code commune (Différent du code postal)", validators=[DataRequired(), Length(min=4, max=5)])
     submit = SubmitField('Submit')
 
     def validate_code_commune(self, code_commune):
@@ -46,19 +46,11 @@ except:
     app.config['SECRET_KEY'] = os.environ["FLASK_KEY"]
 csrf.init_app(app)
 
+
 @app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 def home():
     return render_template('home.html')
-
-
-@app.route('/coordonnee', methods=['GET', 'POST'])
-def coordonnee():
-    if request.method == 'POST':
-        # arrondissement = plus_proche_arrondissement(float(request.form["longitude"]), float(request.form["latitude"]), json_arr)
-        # variation = conversion_pourcentage(variation_2014_2018.loc[[int(arrondissement)], ["Variation"]].values[0][0])
-        return f"Vous habitez dans l'arrondissement {arrondissement}, le prix y a varier de: {variation}% entre 2014 et 2018"
-    return '<form action="" method="post">Longitude: <input type="text" name="longitude" /> Latitude: <input type="text" name="latitude" /><input type="submit" value="Envoyer" /></form>'
 
 
 #only the folium map, it will be renderer inside map_page_appartement.html
@@ -91,3 +83,4 @@ def estimation():
 @app.route('/indisponible', methods=['GET'])
 def indisponible():
     return render_template("vide.html") 
+

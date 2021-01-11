@@ -3,3 +3,4 @@ env/
 config_dev.py
 
 data/
+local_files/
