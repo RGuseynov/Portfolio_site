@@ -1,5 +1,5 @@
 .vscode
 env/
-config.py
+config_dev.py
 
 data/
