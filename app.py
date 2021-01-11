@@ -1,6 +1,5 @@
 from flask import Flask, request, url_for, render_template, flash
-from flask_wtf import FlaskForm
-from flask_wtf.csrf import CsrfProtect
+from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, TextField, SubmitField, IntegerField
 from wtforms.validators import DataRequired, Length, NumberRange, ValidationError
 
@@ -39,7 +38,7 @@ def make_inference(surface, nb_pieces, code_commune):
     return prediction[0]
 
 
-csrf = CsrfProtect()
+csrf = CSRFProtect()
 app = Flask(__name__)
 try:
     app.config.from_pyfile('config_dev.py')
@@ -92,4 +91,3 @@ def estimation():
 @app.route('/indisponible', methods=['GET'])
 def indisponible():
     return render_template("vide.html") 
-
