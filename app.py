@@ -53,15 +53,15 @@ def home():
     return render_template('home.html')
 
 
-#only the folium map, it will be renderer inside map_page_appartement.html
-@app.route('/map_folium_appartement', methods=['GET'])
-def render_appartement_map():
-    return render_template('immobilier/map_folium_appartement.html')
+#only the folium map, it will be renderer inside map_page_departement.html
+@app.route('/map_folium_departement', methods=['GET'])
+def render_departement_map():
+    return render_template('immobilier/map_folium_departement.html')
 
 #page that extend the layout and contain the folium map
-@app.route('/map_page_appartement', methods=['GET'])
-def map_page_appartement():
-    return render_template('immobilier/map_page_appartement.html')
+@app.route('/map_page_departement', methods=['GET'])
+def map_page_departement():
+    return render_template('immobilier/map_page_departement.html')
 
 
 @app.route('/estimation', methods=['GET', 'POST'])
@@ -78,9 +78,4 @@ def estimation():
     else:
         print(form1.errors.items())
     return render_template('immobilier/estimation.html', form=form1)
-
-
-@app.route('/indisponible', methods=['GET'])
-def indisponible():
-    return render_template("vide.html") 
 
