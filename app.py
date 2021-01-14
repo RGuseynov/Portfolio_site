@@ -53,29 +53,55 @@ def home():
     return render_template('home.html')
 
 
-#only the folium map, it will be renderer inside map_page_departement.html
-@app.route('/map_folium_departement', methods=['GET'])
-def render_departement_map():
-    return render_template('immobilier/map_folium_departement.html')
-
-#page that extend the layout and contain the folium map
-@app.route('/map_page_departement', methods=['GET'])
-def map_page_departement():
-    return render_template('immobilier/map_page_departement.html')
-
-
 @app.route('/estimation', methods=['GET', 'POST'])
 def estimation():
-    form1 = InferenceForm()
-    if form1.validate_on_submit():
-        surface = form1.surface.data
-        nb_pieces = form1.nb_pieces.data
-        code_commune = form1.code_commune.data
-        result = make_inference(surface, nb_pieces, code_commune)
-        result = round(result)
-        print(result)
-        return render_template('immobilier/resultat_estimation.html', data=result)
+    form = InferenceForm()
+    if form.validate_on_submit():
+        surface = form.surface.data
+        nb_pieces = form.nb_pieces.data
+        code_commune = form.code_commune.data
+        result = round(make_inference(surface, nb_pieces, code_commune))
+        return render_template('immobilier/predictions/resultat_estimation.html', result=result)
     else:
-        print(form1.errors.items())
-    return render_template('immobilier/estimation.html', form=form1)
+        print(form.errors.items())
+    return render_template('immobilier/predictions/estimation.html', form=form)
+
+
+#page that extend the layout and contain map
+@app.route('/map_departement_page', methods=['GET'])
+def map_departement_page():
+    map_name = "map_departement_folium"
+    return render_template('immobilier/maps/map_departement_page.html', map_name=map_name)
+
+#only the folium map, it will be rendered inside another page
+@app.route('/show_map/<map_name>', methods=['GET'])
+def show_map(map_name):
+    return render_template(f'immobilier/maps/{map_name}.html')
+
+# DVF_2019_raport_initial
+@app.route('/data_exploration_page', methods=['GET'])
+def data_exploration_page():
+    data = {"notebook1_name": "immobilier_EDA_1",
+            "notebook1_height" : 2680,
+            "report1_name": "DVF_2019_raport_initial",
+            "report1_height" : 13000}
+    return render_template('immobilier/data_exploration/data_exploration_page.html', data=data)
+
+@app.route('/show_notebook/<notebook>')
+def show_notebook(notebook):
+    return render_template(f'immobilier/notebooks/{notebook}.html')
+
+
+@app.route('/pandas_profiling_page')
+def pandas_profiling_page():
+    report_name = request.args.get("report")
+    report_height = request.args.get("height")
+    report = {"name": report_name,
+              "height": report_height}
+    return render_template(f"immobilier/data_exploration/pandas_profiling_page.html", report=report)
+
+@app.route('/show_pandas_profiling')
+def show_pandas_profiling():
+    report_name = request.args.get("report_name")
+    return render_template(f'immobilier/data_exploration/{report_name}.html')
 

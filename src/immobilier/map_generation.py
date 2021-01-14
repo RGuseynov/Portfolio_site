@@ -111,13 +111,13 @@ if __name__ == "__main__":
                              index=[700, 1300, 2000, 2800, 5000, 10000], 
                              index_display=[700, 1500, 2500, 4500, 7000, 10000],
                              vmin=700, vmax=10000,
-                             caption="Prix median du m2 pour un appartement par département")
+                             caption="Prix median du m2 par département")
 
     # normal Colormap class utilisation, work with branca library from pip
     # colormap = cm.LinearColormap(colors=['darkgreen', 'green', 'yellow', 'orange', 'red', 'darkred'],
     #                          index=[700, 1300, 2000, 2800, 5000, 10000], 
     #                          vmin=700, vmax=10000,
-    #                          caption="Prix median du m2 pour un appartement par département")
+    #                          caption="Prix median du m2 par département")
 
 
     df_appart["color"] = df_appart["2019_median"].apply(colormap)

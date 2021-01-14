@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block body %}
+
+
+<div class="center">
+
+    <h1>Exploration des données</h1>
+    <p>Ci-dessous, un jupyter notebook qui explique la démarche</p>
+
+</div>
+<iframe src="show_notebook/{{ data.notebook1_name }}" frameborder="0" height="{{ data.notebook1_height }}" width="100%" scrolling="no"></iframe>
+<div class="center">
+    <p>Le rapport généré peut servir de point de départ pour le traitement futur des données et/ou pour des analyse plus poussées. 
+        <br>
+        <br>
+        <a href="pandas_profiling_page?report={{ data.report1_name }}&height={{ data.report1_height }}" class='btn btn-primary'>Voir le résultat de cette première analyse automatique des données</a></p>
+</div>
+
+{% endblock %}
