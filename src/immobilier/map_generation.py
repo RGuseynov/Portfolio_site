@@ -3,19 +3,31 @@ import json
 import pandas as pd 
 import numpy as np
 import folium
+from folium.plugins import FloatImage
 import vincent
 import branca
 import branca.colormap as cm
 
+from PIL import Image, ImageDraw, ImageFont
 
-class FoliumMap:
-    def __init__(self, longitude, latitude):
-        self.longitude = longitude
-        self.latitude = latitude
+
+def create_title_image(title, image_path):
+    W, H = (500,200)
+    image = Image.new("RGBA",(W,H))
+    draw = ImageDraw.Draw(image)
+    w, h = draw.textsize(title)
+    font = ImageFont.truetype('arial.ttf', 20)
+    draw.text((0,0), title, font=font ,fill=(0, 0, 0))
+    image.crop((0, 0,2*w,2*h)).save(image_path, "PNG")
+
+
+class DepartementMap:
+    def __init__(self, longitude, latitude, title):
+        self.title = title
         self.map = folium.Map(
             location=[longitude, latitude],
             tiles='openstreetmap',
-            zoom_start=8,
+            zoom_start=6,
             attr='My Data Attribution'
         )
         self.fgroup_appart = folium.map.FeatureGroup(name="Appartement", overlay=True, control=True, show=True)
@@ -72,20 +84,20 @@ class FoliumMap:
         )
 
         if row_appart is not None:
-            popup_appart = FoliumMap.make_line_chart_popup(row_appart, title=d_geodata["features"][0]["properties"]["nom"])
+            popup_appart = DepartementMap.make_line_chart_popup(row_appart, title=d_geodata["features"][0]["properties"]["nom"])
             popup_appart.add_to(choro_appart)
-            popup_maison = FoliumMap.make_line_chart_popup(row_maison, title=d_geodata["features"][0]["properties"]["nom"])
+            popup_maison = DepartementMap.make_line_chart_popup(row_maison, title=d_geodata["features"][0]["properties"]["nom"])
             popup_maison.add_to(choro_maison)
         else:
-            popup_appart = folium.Popup("Missing from data source")
+            popup_appart = folium.Popup("Données source manquantes")
             popup_appart.add_to(choro_appart)
-            popup_maison = folium.Popup("Missing from data source")
+            popup_maison = folium.Popup("Données source manquantes")
             popup_maison.add_to(choro_maison)
 
         choro_appart.add_to(self.fgroup_appart)
         choro_maison.add_to(self.fgroup_maison)
 
-    def save(self, filepath='templates/immobilier/test2.html'):
+    def save(self, file_path):
         '''Save to html file'''
         # add the color bar to top right of the map
         colormap.add_to(self.map)
@@ -96,7 +108,13 @@ class FoliumMap:
         lcontrol = folium.map.LayerControl(position='topright', collapsed=False)
         lcontrol.add_to(self.map)
 
-        self.map.save(filepath)
+        title_image_path = "static/images/title_logo_departement.png"
+        # create and save the title image to the path
+        create_title_image(self.title, image_path=title_image_path)
+        # create Floating image, image will be loaded from the path when map is loaded in prod
+        FloatImage(title_image_path, bottom=95, left=30).add_to(self.map)
+
+        self.map.save(file_path)
 
 
 if __name__ == "__main__":
@@ -111,7 +129,7 @@ if __name__ == "__main__":
                              index=[700, 1300, 2000, 2800, 5000, 10000], 
                              index_display=[700, 1500, 2500, 4500, 7000, 10000],
                              vmin=700, vmax=10000,
-                             caption="Prix median du m2 par département")
+                             caption="par département en €")
 
     # normal Colormap class utilisation, work with branca library from pip
     # colormap = cm.LinearColormap(colors=['darkgreen', 'green', 'yellow', 'orange', 'red', 'darkred'],
@@ -123,8 +141,8 @@ if __name__ == "__main__":
     df_appart["color"] = df_appart["2019_median"].apply(colormap)
     df_maison["color"] = df_maison["2019_median"].apply(colormap)
 
-    longitude, latitude = 48.8566, 2.3522
-    map1 = FoliumMap(longitude, latitude)
+    longitude, latitude = 45.8566, 2.3522
+    map1 = DepartementMap(longitude, latitude, "Prix médian du m2 d'un bien immobilier en France")
 
     with open("data/immobilier/geo_data/departements.geojson.txt", "r") as file:
         json_departements = json.load(file)
@@ -137,4 +155,4 @@ if __name__ == "__main__":
         else:
             map1.draw_departement(d_geodata)
 
-    map1.save("templates/immobilier/map_folium_departement.html")
+    map1.save(file_path="templates/immobilier/maps/map_departement_folium.html")

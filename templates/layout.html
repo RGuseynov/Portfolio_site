@@ -14,15 +14,15 @@
 <nav class="navbar navbar-inverse">
   <div class="container-fluid">
     <div class="navbar-header">
-      <div class="navbar-brand">Rustam Guseynov Portfolio</div>
-      <div class="navbar-brand">Data & IA</div>
+      <div class="navbar-brand noHover">Rustam Guseynov Portfolio</div>
+      <div class="navbar-brand noHover">Data & IA</div>
     </div>
     <ul class="nav navbar-nav">
-      <li class="active"><a href="{{ url_for('home') }}">Home</a></li>
-      <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Prix Immobilier<span class="caret"></span></a>
+      <li ><a href="{{ url_for('home') }}">Accueil</a></li>
+      <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Marché Immobilier<span class="caret"></span></a>
         <ul class="dropdown-menu">
           <li><a href="{{ url_for('data_exploration_page') }}">Exploration des données</a></li>
-          <li><a href="{{ url_for('map_departement_page') }}">Carte prix départements</a></li>
+          <li><a href="{{ url_for('map_departement_page') }}">Carte de prix par département</a></li>
           <li><a href="{{ url_for('estimation') }}">Estimer un bien</a></li>
         </ul>
       </li>

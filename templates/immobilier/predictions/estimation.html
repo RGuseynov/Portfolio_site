@@ -16,16 +16,27 @@
 <div id="center">
 <div class="container">
   <h2>Estimation d'un bien immobilier</h2>
-  <p>Pour l'instant, seulement l'estimation d'un appartement est disponible</p>
+  <br>
   <form method="POST" action="" class="was-validated">
     {{ form.csrf_token }}
+      <div class="form-group">
+        {{ form.type_bien.label }}
+        {{ form.type_bien }}
+        {% if form.type_bien.errors %}
+        <ul class="errors">
+          {% for error in form.type_bien.errors %}
+                <li class="error">{{ error }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
       <div class="form-group">
           {{ form.surface.label }}
           {{ form.surface(class_="form-control") }}
           {% if form.surface.errors %}
           <ul class="errors">
             {% for error in form.surface.errors %}
-                  <li>{{ error }}</li>
+                  <li class="error">{{ error }}</li>
             {% endfor %}
           </ul>
         {% endif %}
@@ -36,23 +47,23 @@
           {% if form.nb_pieces.errors %}
           <ul class="errors">
             {% for error in form.nb_pieces.errors %}
-                  <li>{{ error }}</li>
+                  <li class="error">{{ error }}</li>
             {% endfor %}
           </ul>
         {% endif %}
       </div>
       <div class="form-group">
-          {{ form.code_commune.label }}
-          {{ form.code_commune(class_="form-control") }}
-          {% if form.code_commune.errors %}
+          {{ form.code_postal.label }}
+          {{ form.code_postal(class_="form-control") }}
+          {% if form.code_postal.errors %}
           <ul class="errors">
-            {% for error in form.code_commune.errors %}
-                  <li>{{ error }}</li>
+            {% for error in form.code_postal.errors %}
+                  <li class="error">{{ error }}</li>
             {% endfor %}
           </ul>
         {% endif %}
       </div>
-      {{ form.submit(class="btn btn-primary") }}
+      {{ form.submit(class_="btn btn-primary") }}
   </form>
 
 </div>

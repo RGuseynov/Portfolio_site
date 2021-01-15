@@ -3,13 +3,12 @@
 {% block body %} 
 
 <div class="center">
-<h1>Projet sur le marché immoblier</h1>
+<h1>Etude du marché immobilier français</h1>
 <p>Ce projet est constitué de deux éléments :</p>
 <ul>
     <li>Une cartographie du prix du m2 par département pour les appartements en France</li>
-    <li>Un estimateur de prix pour un appartement</li>
+    <li>Un estimateur de prix pour appartement</li>
 </ul>
-
 <p>L'ensemble du code du site et du projet est disponible sur <a href="https://github.com/RGuseynov/Portfolio_site">GitHub</a></p>
 <p>Le projet a été développé en Python avec Flask, Pandas, Scikit-learn et Folium</p>
 
@@ -38,20 +37,22 @@
     </li>
     <li>Pour l'arbre de décision : utlisation de différentes combinaisons de features de géolocalisation 
     parmis le département, le code postal, le code commune et le duo longitude/latitude. 
-    Le code commune seul a donné des résulats légérement meilleur.
+    Il n'y a pas de grande différence, hormis le fait que le code département a peu d'impact sur le modèle 
+    étant donné qu'on dispose de "versions" plus précise de cette feature que sont le code postal et le code commune.
+    L'utilisation du duo longitude/latitude n'augmente pas la précision du modèle.
     </li>
 </ul>
 <p>Dans tout les cas, la surface, le nombre de pièces et la géolocalisation ne sont pas suffisants à eux seuls pour
 estimer correctement un bien. Beaucoup d'autres variables dont on ne dispose pas peuvent avoir des impacts significatifs sur le prix
 (ancienneté, état du bien, chauffage, étage...). On pourrait aussi penser à croiser la localisation des biens avec d'autres données geospatiales (densité des zones, axe routier, proximité transport/commerce, distance de la mer, altitude...).
 </p>
+
 <h3>Résultats :</h3>
 <p>Mauvais pour le modèle de régression linéaire et relativement correcte pour l'arbre de décision en considérant le faible nombre de features.</p>
 <p>Le pourcentage d'écart moyen entre le prix réel et le prix estimé est de 62% pour la régression linéaire et de 28% pour l'arbre de décision.</p>
-
 <table>
     <tr>
-      <th>Metrique</th>
+      <th>Métrique</th>
       <th>Régression Linéaire</th>
       <th>Arbre de décision</th>
     </tr>
