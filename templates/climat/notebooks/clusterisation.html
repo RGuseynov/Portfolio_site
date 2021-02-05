@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Immobilier_EDA_1</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>clusterisation</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -14272,12 +14272,18 @@ a.anchor-link {
 
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="Premi&#232;re-exploration-du-jeu-de-donn&#233;es.">Premi&#232;re exploration du jeu de donn&#233;es.<a class="anchor-link" href="#Premi&#232;re-exploration-du-jeu-de-donn&#233;es.">&#182;</a></h2>
+<h2 id="Clusterisation">Clusterisation<a class="anchor-link" href="#Clusterisation">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><strong><em>Import du module gzip pour l'ouverture des fichiers compressés et de la librairie pandas. Changement d'une option d'affichage pour éviter d'avoir les nombre sous format scientifique dans les pandas dataframe.</em></strong></p>
+<p><strong><em>Ici on va utiliser 20 ans de données préparer durant la phase précédente, pour clusteriser les stations françaises et par extension déterminer un ensemble de zones qui ont des conditions climatiques similaires.</em></strong></p>
+
+</div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Import des modules nécessaires</em></strong></p>
 
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
@@ -14286,10 +14292,11 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">gzip</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-
-<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.float_format&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">%.5f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span> 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">silhouette_score</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
 </pre></div>
 
      </div>
@@ -14297,15 +14304,21 @@ a.anchor-link {
 </div>
 </div>
 
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>On charge les 20 ans de données mensualisées sur l'Europe dans le premier dataframe et les données géographique sur les stations dans le second dataframe.</em></strong></p>
+
+</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">folder_path</span> <span class="o">=</span> <span class="s2">&quot;../../../data/immobilier/transactions_raw&quot;</span>
-<span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">folder_path</span><span class="si">}</span><span class="s1">/full</span><span class="si">{</span><span class="mi">2019</span><span class="si">}</span><span class="s1">.csv.gz&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;../../../data/climat/clean_for_bi/ClimatFACT.csv&quot;</span><span class="p">)</span>
+<span class="n">df_stations</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;../../../data/climat/clean_for_bi/StationDIM.csv&quot;</span><span class="p">)</span>
+<span class="n">df</span>
 </pre></div>
 
      </div>
@@ -14321,13 +14334,248 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[2]:</div>
 
 
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>c:\users\rustam\documents\projets\python\portfolio_site\env\lib\site-packages\IPython\core\interactiveshell.py:3146: DtypeWarning: Columns (10,12,14,16,17,18,20,22,35,36) have mixed types.Specify dtype option on import or set low_memory=False.
-  has_raised = await self.run_ast_nodes(code_ast.body, cell_name,
-</pre>
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>DATE</th>
+      <th>STATION</th>
+      <th>TEMP</th>
+      <th>MAX</th>
+      <th>MIN</th>
+      <th>DEWP</th>
+      <th>WDSP</th>
+      <th>MXSPD</th>
+      <th>SNDP</th>
+      <th>PRCP</th>
+      <th>FOG</th>
+      <th>RAIN</th>
+      <th>SNOW</th>
+      <th>HAIL</th>
+      <th>THUN</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2000-01</td>
+      <td>60338099999</td>
+      <td>13.032258</td>
+      <td>20.000000</td>
+      <td>6.000000</td>
+      <td>9.786738</td>
+      <td>8.118929</td>
+      <td>33.521202</td>
+      <td>0.0</td>
+      <td>1.778000</td>
+      <td>0.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2000-01</td>
+      <td>16754099999</td>
+      <td>10.648746</td>
+      <td>18.000000</td>
+      <td>4.000000</td>
+      <td>4.003584</td>
+      <td>21.495148</td>
+      <td>55.374798</td>
+      <td>0.0</td>
+      <td>26.791922</td>
+      <td>0.0</td>
+      <td>22.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2000-01</td>
+      <td>16754399999</td>
+      <td>11.075269</td>
+      <td>17.000000</td>
+      <td>4.000000</td>
+      <td>4.740143</td>
+      <td>26.489574</td>
+      <td>68.338806</td>
+      <td>0.0</td>
+      <td>304.769530</td>
+      <td>0.0</td>
+      <td>12.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2000-01</td>
+      <td>16746099999</td>
+      <td>9.236559</td>
+      <td>15.388889</td>
+      <td>0.000000</td>
+      <td>4.274194</td>
+      <td>13.800387</td>
+      <td>48.152000</td>
+      <td>0.0</td>
+      <td>1.836420</td>
+      <td>0.0</td>
+      <td>21.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2000-01</td>
+      <td>16746433209</td>
+      <td>9.037635</td>
+      <td>21.000002</td>
+      <td>0.000000</td>
+      <td>5.645162</td>
+      <td>12.964000</td>
+      <td>44.633200</td>
+      <td>0.0</td>
+      <td>533.346700</td>
+      <td>1.0</td>
+      <td>21.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>514131</th>
+      <td>2020-12</td>
+      <td>1001099999</td>
+      <td>-1.603943</td>
+      <td>4.222221</td>
+      <td>-10.611111</td>
+      <td>-3.888889</td>
+      <td>31.794659</td>
+      <td>86.673600</td>
+      <td>0.0</td>
+      <td>1.163320</td>
+      <td>1.0</td>
+      <td>11.0</td>
+      <td>22.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>514132</th>
+      <td>2020-12</td>
+      <td>1068099999</td>
+      <td>-0.116858</td>
+      <td>6.000000</td>
+      <td>-11.000000</td>
+      <td>-4.095785</td>
+      <td>26.445282</td>
+      <td>57.597202</td>
+      <td>0.0</td>
+      <td>355.564450</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>10.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>514133</th>
+      <td>2020-12</td>
+      <td>1074099999</td>
+      <td>-0.984127</td>
+      <td>5.000000</td>
+      <td>-12.111111</td>
+      <td>-4.539682</td>
+      <td>22.753143</td>
+      <td>61.116000</td>
+      <td>0.0</td>
+      <td>330.210170</td>
+      <td>0.0</td>
+      <td>7.0</td>
+      <td>8.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>514134</th>
+      <td>2020-12</td>
+      <td>1055099999</td>
+      <td>0.931900</td>
+      <td>8.000001</td>
+      <td>-10.000000</td>
+      <td>-2.983871</td>
+      <td>29.942657</td>
+      <td>84.266000</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>514135</th>
+      <td>2020-12</td>
+      <td>1078099999</td>
+      <td>-0.978495</td>
+      <td>5.000000</td>
+      <td>-11.222222</td>
+      <td>-4.829749</td>
+      <td>24.840696</td>
+      <td>72.228000</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>514136 rows × 15 columns</p>
 </div>
 </div>
 
@@ -14336,19 +14584,14 @@ a.anchor-link {
 </div>
 
 </div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><strong><em>Ce warning nous informe qu'il y a des colonnes qui contiennet des types de valeurs mixtes (probablement des nombre et des chaînes de charactères mélangés dans la même colonne). Il sera nécessaire de comprendre la nature de ces colonnes et d'opérer des conversions si nécessaire. 
-Remarque : une fois qu'on connaitra mieu les données et si on veut optimiser leurs chargement et leurs consommation de place en mémoire, on pourra spécifier un schéma de lecture avec le type de chaque colonne.</em></strong></p>
 
-</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_stations</span>
 </pre></div>
 
      </div>
@@ -14387,149 +14630,59 @@ Remarque : une fois qu'on connaitra mieu les données et si on veut optimiser le
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>id_mutation</th>
-      <th>date_mutation</th>
-      <th>numero_disposition</th>
-      <th>nature_mutation</th>
-      <th>valeur_fonciere</th>
-      <th>adresse_numero</th>
-      <th>adresse_suffixe</th>
-      <th>adresse_nom_voie</th>
-      <th>adresse_code_voie</th>
-      <th>code_postal</th>
-      <th>...</th>
-      <th>type_local</th>
-      <th>surface_reelle_bati</th>
-      <th>nombre_pieces_principales</th>
-      <th>code_nature_culture</th>
-      <th>nature_culture</th>
-      <th>code_nature_culture_speciale</th>
-      <th>nature_culture_speciale</th>
-      <th>surface_terrain</th>
-      <th>longitude</th>
-      <th>latitude</th>
+      <th>STATION</th>
+      <th>NAME</th>
+      <th>COUNTRY</th>
+      <th>LATITUDE</th>
+      <th>LONGITUDE</th>
+      <th>ELEVATION</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>2019-1</td>
-      <td>2019-01-04</td>
-      <td>1</td>
-      <td>Vente</td>
-      <td>37220.00000</td>
-      <td>26.00000</td>
-      <td>NaN</td>
-      <td>RUE DE MONTHOLON</td>
-      <td>2730</td>
-      <td>1000.00000</td>
-      <td>...</td>
-      <td>Appartement</td>
-      <td>20.00000</td>
-      <td>1.00000</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>5.20956</td>
-      <td>46.19884</td>
+      <td>60338099999</td>
+      <td>MELILLA</td>
+      <td>Espagne</td>
+      <td>35.279816</td>
+      <td>-2.956256</td>
+      <td>47.54</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>2019-2</td>
-      <td>2019-01-04</td>
-      <td>1</td>
-      <td>Vente</td>
-      <td>185100.00000</td>
-      <td>22.00000</td>
-      <td>NaN</td>
-      <td>RUE GEN DELESTRAINT</td>
-      <td>1650</td>
-      <td>1000.00000</td>
-      <td>...</td>
-      <td>Appartement</td>
-      <td>62.00000</td>
-      <td>3.00000</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>5.21940</td>
-      <td>46.19877</td>
+      <td>16754099999</td>
+      <td>NIKOS KAZANTZAKIS</td>
+      <td>Grèce</td>
+      <td>35.339718</td>
+      <td>25.180298</td>
+      <td>35.05</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>2019-2</td>
-      <td>2019-01-04</td>
-      <td>1</td>
-      <td>Vente</td>
-      <td>185100.00000</td>
-      <td>22.00000</td>
-      <td>B</td>
-      <td>RUE GEN DELESTRAINT</td>
-      <td>1650</td>
-      <td>1000.00000</td>
-      <td>...</td>
-      <td>Dépendance</td>
-      <td>NaN</td>
-      <td>0.00000</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>5.21940</td>
-      <td>46.19877</td>
+      <td>16754399999</td>
+      <td>KARPATHOS</td>
+      <td>Grèce</td>
+      <td>35.421410</td>
+      <td>27.146008</td>
+      <td>20.11</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>2019-3</td>
-      <td>2019-01-08</td>
-      <td>1</td>
-      <td>Vente</td>
-      <td>209000.00000</td>
-      <td>3.00000</td>
-      <td>NaN</td>
-      <td>RUE DES CHAMPAGNES</td>
-      <td>0043</td>
-      <td>1160.00000</td>
-      <td>...</td>
-      <td>Maison</td>
-      <td>90.00000</td>
-      <td>4.00000</td>
-      <td>S</td>
-      <td>sols</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>940.00000</td>
-      <td>5.28210</td>
-      <td>45.99957</td>
+      <td>16746099999</td>
+      <td>SOUDA</td>
+      <td>Grèce</td>
+      <td>35.531746</td>
+      <td>24.149677</td>
+      <td>149.35</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>2019-4</td>
-      <td>2019-01-07</td>
-      <td>1</td>
-      <td>Vente</td>
-      <td>134900.00000</td>
-      <td>5.00000</td>
-      <td>NaN</td>
-      <td>LOT LE BIOLAY</td>
-      <td>A003</td>
-      <td>1370.00000</td>
-      <td>...</td>
-      <td>Maison</td>
-      <td>101.00000</td>
-      <td>5.00000</td>
-      <td>S</td>
-      <td>sols</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>490.00000</td>
-      <td>5.29993</td>
-      <td>46.29328</td>
+      <td>16746433209</td>
+      <td>SOUDA BAY CRETE</td>
+      <td>Grèce</td>
+      <td>35.533329</td>
+      <td>24.150000</td>
+      <td>146.30</td>
     </tr>
     <tr>
       <th>...</th>
@@ -14539,145 +14692,55 @@ Remarque : une fois qu'on connaitra mieu les données et si on veut optimiser le
       <td>...</td>
       <td>...</td>
       <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
     </tr>
     <tr>
-      <th>3142947</th>
-      <td>2019-1352701</td>
-      <td>2019-12-30</td>
-      <td>1</td>
-      <td>Vente</td>
-      <td>1400000.00000</td>
-      <td>24.00000</td>
-      <td>NaN</td>
-      <td>RUE SAINT SAUVEUR</td>
-      <td>8752</td>
-      <td>75002.00000</td>
-      <td>...</td>
-      <td>Local industriel. commercial ou assimilé</td>
-      <td>100.00000</td>
-      <td>0.00000</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>2.34809</td>
-      <td>48.86643</td>
+      <th>3070</th>
+      <td>4071099999</td>
+      <td>MANARBAKKI</td>
+      <td>Islande</td>
+      <td>66.199997</td>
+      <td>-17.100000</td>
+      <td>17.00</td>
     </tr>
     <tr>
-      <th>3142948</th>
-      <td>2019-1352701</td>
-      <td>2019-12-30</td>
-      <td>1</td>
-      <td>Vente</td>
-      <td>1400000.00000</td>
-      <td>24.00000</td>
-      <td>NaN</td>
-      <td>RUE SAINT SAUVEUR</td>
-      <td>8752</td>
-      <td>75002.00000</td>
-      <td>...</td>
-      <td>Appartement</td>
-      <td>97.00000</td>
-      <td>3.00000</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>2.34809</td>
-      <td>48.86643</td>
+      <th>3071</th>
+      <td>74900599999</td>
+      <td>TIBENHAM AIRFIELD</td>
+      <td>Royaume-Uni</td>
+      <td>52.457001</td>
+      <td>1.162000</td>
+      <td>52.00</td>
     </tr>
     <tr>
-      <th>3142949</th>
-      <td>2019-1352702</td>
-      <td>2019-12-17</td>
-      <td>1</td>
-      <td>Adjudication</td>
-      <td>620000.00000</td>
-      <td>14.00000</td>
-      <td>NaN</td>
-      <td>RUE PAVEE</td>
-      <td>7195</td>
-      <td>75004.00000</td>
-      <td>...</td>
-      <td>Appartement</td>
-      <td>45.00000</td>
-      <td>2.00000</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>2.36071</td>
-      <td>48.85619</td>
+      <th>3072</th>
+      <td>26503099999</td>
+      <td>RUCAVA</td>
+      <td>Lettonie</td>
+      <td>56.150002</td>
+      <td>21.166666</td>
+      <td>19.00</td>
     </tr>
     <tr>
-      <th>3142950</th>
-      <td>2019-1352703</td>
-      <td>2019-12-05</td>
-      <td>1</td>
-      <td>Vente</td>
-      <td>370000.00000</td>
-      <td>23.00000</td>
-      <td>NaN</td>
-      <td>RUE POISSONNIERE</td>
-      <td>7561</td>
-      <td>75002.00000</td>
-      <td>...</td>
-      <td>Local industriel. commercial ou assimilé</td>
-      <td>47.00000</td>
-      <td>0.00000</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>2.34748</td>
-      <td>48.86973</td>
+      <th>3073</th>
+      <td>7121099999</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>48.849998</td>
+      <td>-3.000000</td>
+      <td>36.00</td>
     </tr>
     <tr>
-      <th>3142951</th>
-      <td>2019-1352704</td>
-      <td>2019-12-12</td>
-      <td>1</td>
-      <td>Adjudication</td>
-      <td>44000.00000</td>
-      <td>2.00000</td>
-      <td>NaN</td>
-      <td>RUE NOTRE DAME DES VICTOIRES</td>
-      <td>6840</td>
-      <td>75002.00000</td>
-      <td>...</td>
-      <td>Dépendance</td>
-      <td>NaN</td>
-      <td>0.00000</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>2.34126</td>
-      <td>48.86649</td>
+      <th>3074</th>
+      <td>16599099999</td>
+      <td>GUDJA</td>
+      <td>Malte</td>
+      <td>35.849998</td>
+      <td>14.500000</td>
+      <td>78.00</td>
     </tr>
   </tbody>
 </table>
-<p>3142952 rows × 40 columns</p>
+<p>3075 rows × 6 columns</p>
 </div>
 </div>
 
@@ -14690,7 +14753,7 @@ Remarque : une fois qu'on connaitra mieu les données et si on veut optimiser le
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><strong><em>Utilisation des methodes info() et describe() de pandas pour un premier aperçu de la nature et de la distribution des données. Utilisation de la méthode value_counts() pour les colonnes non numériques</em></strong></p>
+<p><strong><em>-On filtre les stations pour garder que les stations françaises. <br> -On merge le dataframe des données avec le dataframe des stations pour garder l'ensemble des données concernant la France (correspond à un right join en SQL ici).</em></strong></p>
 
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
@@ -14699,7 +14762,9 @@ Remarque : une fois qu'on connaitra mieu les données et si on veut optimiser le
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_stations</span> <span class="o">=</span> <span class="n">df_stations</span><span class="p">[</span><span class="n">df_stations</span><span class="p">[</span><span class="s2">&quot;COUNTRY&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;France&quot;</span><span class="p">]</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">df_stations</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;STATION&quot;</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;STATION&quot;</span><span class="p">)</span>
+<span class="n">df</span>
 </pre></div>
 
      </div>
@@ -14715,58 +14780,308 @@ Remarque : une fois qu'on connaitra mieu les données et si on veut optimiser le
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[4]:</div>
 
 
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt;
-RangeIndex: 3142952 entries, 0 to 3142951
-Data columns (total 40 columns):
- #   Column                        Dtype  
----  ------                        -----  
- 0   id_mutation                   object 
- 1   date_mutation                 object 
- 2   numero_disposition            int64  
- 3   nature_mutation               object 
- 4   valeur_fonciere               float64
- 5   adresse_numero                float64
- 6   adresse_suffixe               object 
- 7   adresse_nom_voie              object 
- 8   adresse_code_voie             object 
- 9   code_postal                   float64
- 10  code_commune                  object 
- 11  nom_commune                   object 
- 12  code_departement              object 
- 13  ancien_code_commune           float64
- 14  ancien_nom_commune            object 
- 15  id_parcelle                   object 
- 16  ancien_id_parcelle            object 
- 17  numero_volume                 object 
- 18  lot1_numero                   object 
- 19  lot1_surface_carrez           float64
- 20  lot2_numero                   object 
- 21  lot2_surface_carrez           float64
- 22  lot3_numero                   object 
- 23  lot3_surface_carrez           float64
- 24  lot4_numero                   float64
- 25  lot4_surface_carrez           float64
- 26  lot5_numero                   float64
- 27  lot5_surface_carrez           float64
- 28  nombre_lots                   int64  
- 29  code_type_local               float64
- 30  type_local                    object 
- 31  surface_reelle_bati           float64
- 32  nombre_pieces_principales     float64
- 33  code_nature_culture           object 
- 34  nature_culture                object 
- 35  code_nature_culture_speciale  object 
- 36  nature_culture_speciale       object 
- 37  surface_terrain               float64
- 38  longitude                     float64
- 39  latitude                      float64
-dtypes: float64(17), int64(2), object(21)
-memory usage: 959.2+ MB
-</pre>
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>DATE</th>
+      <th>STATION</th>
+      <th>TEMP</th>
+      <th>MAX</th>
+      <th>MIN</th>
+      <th>DEWP</th>
+      <th>WDSP</th>
+      <th>MXSPD</th>
+      <th>SNDP</th>
+      <th>PRCP</th>
+      <th>FOG</th>
+      <th>RAIN</th>
+      <th>SNOW</th>
+      <th>HAIL</th>
+      <th>THUN</th>
+      <th>NAME</th>
+      <th>COUNTRY</th>
+      <th>LATITUDE</th>
+      <th>LONGITUDE</th>
+      <th>ELEVATION</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2000-01</td>
+      <td>7770099999</td>
+      <td>9.801075</td>
+      <td>15.000000</td>
+      <td>2.500000</td>
+      <td>4.876344</td>
+      <td>35.020720</td>
+      <td>125.936000</td>
+      <td>0.0</td>
+      <td>25.803862</td>
+      <td>0.0</td>
+      <td>9.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>41.366665</td>
+      <td>9.166667</td>
+      <td>116.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2000-02</td>
+      <td>7770099999</td>
+      <td>11.444445</td>
+      <td>15.500000</td>
+      <td>6.000000</td>
+      <td>7.024904</td>
+      <td>37.046387</td>
+      <td>100.008000</td>
+      <td>0.0</td>
+      <td>0.452120</td>
+      <td>0.0</td>
+      <td>6.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>41.366665</td>
+      <td>9.166667</td>
+      <td>116.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2000-03</td>
+      <td>7770099999</td>
+      <td>12.173835</td>
+      <td>16.722221</td>
+      <td>6.999999</td>
+      <td>7.989247</td>
+      <td>36.783108</td>
+      <td>101.860000</td>
+      <td>0.0</td>
+      <td>0.269240</td>
+      <td>0.0</td>
+      <td>10.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>41.366665</td>
+      <td>9.166667</td>
+      <td>116.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2000-04</td>
+      <td>7770099999</td>
+      <td>13.812963</td>
+      <td>20.500000</td>
+      <td>8.777778</td>
+      <td>10.233334</td>
+      <td>40.892160</td>
+      <td>107.230804</td>
+      <td>0.0</td>
+      <td>1.620520</td>
+      <td>0.0</td>
+      <td>11.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>2.0</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>41.366665</td>
+      <td>9.166667</td>
+      <td>116.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2000-05</td>
+      <td>7770099999</td>
+      <td>18.347670</td>
+      <td>25.222221</td>
+      <td>12.388889</td>
+      <td>14.177420</td>
+      <td>34.931110</td>
+      <td>84.821600</td>
+      <td>0.0</td>
+      <td>0.340360</td>
+      <td>3.0</td>
+      <td>6.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>41.366665</td>
+      <td>9.166667</td>
+      <td>116.0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>42582</th>
+      <td>2020-07</td>
+      <td>7121099999</td>
+      <td>17.216846</td>
+      <td>23.888890</td>
+      <td>12.722223</td>
+      <td>NaN</td>
+      <td>18.902348</td>
+      <td>40.744000</td>
+      <td>0.0</td>
+      <td>0.185420</td>
+      <td>0.0</td>
+      <td>4.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>48.849998</td>
+      <td>-3.000000</td>
+      <td>36.0</td>
+    </tr>
+    <tr>
+      <th>42583</th>
+      <td>2020-08</td>
+      <td>7121099999</td>
+      <td>18.614695</td>
+      <td>28.222223</td>
+      <td>12.388889</td>
+      <td>NaN</td>
+      <td>17.432697</td>
+      <td>51.856000</td>
+      <td>0.0</td>
+      <td>0.342900</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>48.849998</td>
+      <td>-3.000000</td>
+      <td>36.0</td>
+    </tr>
+    <tr>
+      <th>42584</th>
+      <td>2020-09</td>
+      <td>7121099999</td>
+      <td>16.825926</td>
+      <td>24.722221</td>
+      <td>9.777777</td>
+      <td>NaN</td>
+      <td>17.692774</td>
+      <td>57.597202</td>
+      <td>0.0</td>
+      <td>0.403860</td>
+      <td>2.0</td>
+      <td>5.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>48.849998</td>
+      <td>-3.000000</td>
+      <td>36.0</td>
+    </tr>
+    <tr>
+      <th>42585</th>
+      <td>2020-10</td>
+      <td>7121099999</td>
+      <td>13.163083</td>
+      <td>20.611110</td>
+      <td>8.500000</td>
+      <td>NaN</td>
+      <td>24.607704</td>
+      <td>64.820000</td>
+      <td>0.0</td>
+      <td>2.580640</td>
+      <td>0.0</td>
+      <td>19.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>48.849998</td>
+      <td>-3.000000</td>
+      <td>36.0</td>
+    </tr>
+    <tr>
+      <th>42586</th>
+      <td>2020-11</td>
+      <td>7121099999</td>
+      <td>12.135185</td>
+      <td>19.388890</td>
+      <td>6.111111</td>
+      <td>NaN</td>
+      <td>19.828747</td>
+      <td>53.522800</td>
+      <td>0.0</td>
+      <td>0.419100</td>
+      <td>0.0</td>
+      <td>8.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>48.849998</td>
+      <td>-3.000000</td>
+      <td>36.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>42587 rows × 20 columns</p>
 </div>
 </div>
 
@@ -14774,6 +15089,14 @@ memory usage: 959.2+ MB
 
 </div>
 
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Pour clusteriser les données, on va utiliser l'algorithme k-means.<br> K-means est un algorithme qui se basent sur les distances entre les données. Chaque feature ou colonne représente une dimension dans un espace de N dimensions où N est le nombre total de features, chaque ligne de valeur ou entrée représente un point dans cette espace. Le but de k-means est de créer k groupes de points dont les membres sont le plus proche possible les uns des autres, tout en étant le plus loin possible des autres groupes. <br> De ce fait, les features avec un ordre de grandeur plus importants auront un effet plus important sur la création de ces groupes. <br> D'où la nécessiter de normaliser les données (c'est à dire les scaler dans le même ordre de grandeur). <br>La méthode la plus efficace lorsqu'on a des données sans outlier (valeurs extrêmes ou anormals) est de les scaler entre 0 et 1 où la valeur minimal sera assigné à 0 et la valeur maximal à 1. <br> Je regarde la distribution de mes données pour voir si je vais les normaliser ainsi.</em></strong></p>
+
+</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
@@ -14819,203 +15142,185 @@ memory usage: 959.2+ MB
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>numero_disposition</th>
-      <th>valeur_fonciere</th>
-      <th>adresse_numero</th>
-      <th>code_postal</th>
-      <th>ancien_code_commune</th>
-      <th>lot1_surface_carrez</th>
-      <th>lot2_surface_carrez</th>
-      <th>lot3_surface_carrez</th>
-      <th>lot4_numero</th>
-      <th>lot4_surface_carrez</th>
-      <th>lot5_numero</th>
-      <th>lot5_surface_carrez</th>
-      <th>nombre_lots</th>
-      <th>code_type_local</th>
-      <th>surface_reelle_bati</th>
-      <th>nombre_pieces_principales</th>
-      <th>surface_terrain</th>
-      <th>longitude</th>
-      <th>latitude</th>
+      <th>STATION</th>
+      <th>TEMP</th>
+      <th>MAX</th>
+      <th>MIN</th>
+      <th>DEWP</th>
+      <th>WDSP</th>
+      <th>MXSPD</th>
+      <th>SNDP</th>
+      <th>PRCP</th>
+      <th>FOG</th>
+      <th>RAIN</th>
+      <th>SNOW</th>
+      <th>HAIL</th>
+      <th>THUN</th>
+      <th>LATITUDE</th>
+      <th>LONGITUDE</th>
+      <th>ELEVATION</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>count</th>
-      <td>3142952.00000</td>
-      <td>3106616.00000</td>
-      <td>1857186.00000</td>
-      <td>3109897.00000</td>
-      <td>4165.00000</td>
-      <td>269817.00000</td>
-      <td>66781.00000</td>
-      <td>6586.00000</td>
-      <td>11659.00000</td>
-      <td>1848.00000</td>
-      <td>5633.00000</td>
-      <td>862.00000</td>
-      <td>3142952.00000</td>
-      <td>1677584.00000</td>
-      <td>1277691.00000</td>
-      <td>1675365.00000</td>
-      <td>2156354.00000</td>
-      <td>3050132.00000</td>
-      <td>3050132.00000</td>
+      <td>4.258700e+04</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42112.000000</td>
+      <td>42356.000000</td>
+      <td>42343.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
     </tr>
     <tr>
       <th>mean</th>
-      <td>1.18195</td>
-      <td>1070014.23965</td>
-      <td>754.05352</td>
-      <td>50904.89277</td>
-      <td>52682.44970</td>
-      <td>60.99605</td>
-      <td>63.30206</td>
-      <td>72.46570</td>
-      <td>115.57475</td>
-      <td>89.21439</td>
-      <td>125.81999</td>
-      <td>91.63052</td>
-      <td>0.39817</td>
-      <td>2.00101</td>
-      <td>114.51059</td>
-      <td>2.40983</td>
-      <td>3096.87710</td>
-      <td>2.05172</td>
-      <td>46.50033</td>
+      <td>7.601723e+09</td>
+      <td>12.658932</td>
+      <td>24.048797</td>
+      <td>2.213007</td>
+      <td>7.984414</td>
+      <td>13.921353</td>
+      <td>45.783742</td>
+      <td>2.465790</td>
+      <td>23.617862</td>
+      <td>3.191913</td>
+      <td>10.735189</td>
+      <td>0.645420</td>
+      <td>0.101604</td>
+      <td>0.825991</td>
+      <td>46.327805</td>
+      <td>2.398295</td>
+      <td>161.356765</td>
     </tr>
     <tr>
       <th>std</th>
-      <td>6.68431</td>
-      <td>8324055.29883</td>
-      <td>2104.13210</td>
-      <td>27703.65678</td>
-      <td>25844.65742</td>
-      <td>94.57654</td>
-      <td>55.19690</td>
-      <td>84.71184</td>
-      <td>524.01236</td>
-      <td>182.48565</td>
-      <td>510.02737</td>
-      <td>104.97199</td>
-      <td>0.93328</td>
-      <td>0.94395</td>
-      <td>944.21543</td>
-      <td>2.08152</td>
-      <td>13556.24495</td>
-      <td>5.31312</td>
-      <td>4.66080</td>
+      <td>4.666629e+09</td>
+      <td>5.993739</td>
+      <td>7.464713</td>
+      <td>6.378984</td>
+      <td>4.864418</td>
+      <td>5.960199</td>
+      <td>16.178692</td>
+      <td>42.167552</td>
+      <td>84.109981</td>
+      <td>3.873329</td>
+      <td>6.325143</td>
+      <td>1.774516</td>
+      <td>0.411234</td>
+      <td>1.478086</td>
+      <td>2.452958</td>
+      <td>3.446748</td>
+      <td>198.381776</td>
     </tr>
     <tr>
       <th>min</th>
-      <td>1.00000</td>
-      <td>0.01000</td>
-      <td>1.00000</td>
-      <td>1000.00000</td>
-      <td>1059.00000</td>
-      <td>0.14000</td>
-      <td>0.13000</td>
-      <td>0.85000</td>
-      <td>2.00000</td>
-      <td>1.00000</td>
-      <td>2.00000</td>
-      <td>0.89000</td>
-      <td>0.00000</td>
-      <td>1.00000</td>
-      <td>1.00000</td>
-      <td>0.00000</td>
-      <td>1.00000</td>
-      <td>-63.14744</td>
-      <td>-21.38505</td>
+      <td>7.002100e+09</td>
+      <td>-6.279762</td>
+      <td>2.388888</td>
+      <td>-31.000000</td>
+      <td>-12.070881</td>
+      <td>0.000000</td>
+      <td>3.518800</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>41.366665</td>
+      <td>-5.600000</td>
+      <td>2.130000</td>
     </tr>
     <tr>
       <th>25%</th>
-      <td>1.00000</td>
-      <td>60000.00000</td>
-      <td>8.00000</td>
-      <td>29810.00000</td>
-      <td>35147.00000</td>
-      <td>33.58000</td>
-      <td>42.64000</td>
-      <td>38.46000</td>
-      <td>8.00000</td>
-      <td>32.98000</td>
-      <td>8.00000</td>
-      <td>25.97000</td>
-      <td>0.00000</td>
-      <td>1.00000</td>
-      <td>50.00000</td>
-      <td>0.00000</td>
-      <td>235.00000</td>
-      <td>0.10208</td>
-      <td>44.90288</td>
+      <td>7.150100e+09</td>
+      <td>7.912031</td>
+      <td>17.777779</td>
+      <td>-2.277778</td>
+      <td>4.218453</td>
+      <td>10.108336</td>
+      <td>35.188000</td>
+      <td>0.000000</td>
+      <td>0.297180</td>
+      <td>0.000000</td>
+      <td>6.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>43.913887</td>
+      <td>-0.006439</td>
+      <td>52.120000</td>
     </tr>
     <tr>
       <th>50%</th>
-      <td>1.00000</td>
-      <td>148600.00000</td>
-      <td>25.00000</td>
-      <td>49600.00000</td>
-      <td>50524.00000</td>
-      <td>52.91000</td>
-      <td>60.72000</td>
-      <td>60.38000</td>
-      <td>24.00000</td>
-      <td>65.07000</td>
-      <td>28.00000</td>
-      <td>74.44000</td>
-      <td>0.00000</td>
-      <td>2.00000</td>
-      <td>75.00000</td>
-      <td>2.00000</td>
-      <td>620.00000</td>
-      <td>2.28463</td>
-      <td>47.18245</td>
+      <td>7.330100e+09</td>
+      <td>12.512963</td>
+      <td>23.999998</td>
+      <td>1.722221</td>
+      <td>8.033334</td>
+      <td>12.803494</td>
+      <td>42.410800</td>
+      <td>0.000000</td>
+      <td>0.566420</td>
+      <td>2.000000</td>
+      <td>10.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>46.587746</td>
+      <td>2.370278</td>
+      <td>101.000000</td>
     </tr>
     <tr>
       <th>75%</th>
-      <td>1.00000</td>
-      <td>270000.00000</td>
-      <td>95.00000</td>
-      <td>76290.00000</td>
-      <td>79035.00000</td>
-      <td>72.79000</td>
-      <td>76.04000</td>
-      <td>84.92500</td>
-      <td>71.00000</td>
-      <td>97.73250</td>
-      <td>82.00000</td>
-      <td>105.85500</td>
-      <td>1.00000</td>
-      <td>3.00000</td>
-      <td>105.00000</td>
-      <td>4.00000</td>
-      <td>1920.00000</td>
-      <td>4.04114</td>
-      <td>48.76346</td>
+      <td>7.588100e+09</td>
+      <td>17.383423</td>
+      <td>30.222221</td>
+      <td>6.999999</td>
+      <td>12.141577</td>
+      <td>16.219936</td>
+      <td>53.522800</td>
+      <td>0.000000</td>
+      <td>0.998220</td>
+      <td>5.000000</td>
+      <td>15.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>1.000000</td>
+      <td>48.538319</td>
+      <td>4.944275</td>
+      <td>179.000000</td>
     </tr>
     <tr>
       <th>max</th>
-      <td>694.00000</td>
-      <td>2086000000.00000</td>
-      <td>9999.00000</td>
-      <td>97490.00000</td>
-      <td>91182.00000</td>
-      <td>9646.20000</td>
-      <td>8630.00000</td>
-      <td>3583.64000</td>
-      <td>20035.00000</td>
-      <td>5107.90000</td>
-      <td>20036.00000</td>
-      <td>1029.55000</td>
-      <td>175.00000</td>
-      <td>4.00000</td>
-      <td>312962.00000</td>
-      <td>67.00000</td>
-      <td>2047961.00000</td>
-      <td>55.82861</td>
-      <td>51.08207</td>
+      <td>9.961710e+10</td>
+      <td>28.919355</td>
+      <td>45.500000</td>
+      <td>22.388891</td>
+      <td>22.968520</td>
+      <td>76.487600</td>
+      <td>161.864800</td>
+      <td>4097.528000</td>
+      <td>711.128900</td>
+      <td>30.000000</td>
+      <td>31.000000</td>
+      <td>21.000000</td>
+      <td>6.000000</td>
+      <td>16.000000</td>
+      <td>51.049999</td>
+      <td>9.533333</td>
+      <td>1565.000000</td>
     </tr>
   </tbody>
 </table>
@@ -15028,13 +15333,19 @@ memory usage: 959.2+ MB
 
 </div>
 
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>En regardant ces valeurs, on voit que globalement les données sont propices à la normalisation hormis SNPD, PRCP, SNOW, HAIL et THUN. On voit que ces features sont très orientés vers leurs valeurs min avec des outliers en max. Je regarde le 9e décile de ces features</em></strong></p>
+
+</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;nature_mutation&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="p">[[</span><span class="s2">&quot;SNDP&quot;</span><span class="p">,</span> <span class="s2">&quot;PRCP&quot;</span><span class="p">,</span> <span class="s2">&quot;SNOW&quot;</span><span class="p">,</span> <span class="s2">&quot;HAIL&quot;</span><span class="p">,</span> <span class="s2">&quot;THUN&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.9</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -15056,13 +15367,12 @@ memory usage: 959.2+ MB
 
 
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
-<pre>Vente                                 2856205
-Vente en l&#39;état futur d&#39;achèvement     232995
-Echange                                 34579
-Vente terrain à bâtir                    9451
-Adjudication                             7521
-Expropriation                            2201
-Name: nature_mutation, dtype: int64</pre>
+<pre>SNDP     0.00000
+PRCP    25.91308
+SNOW     2.00000
+HAIL     0.00000
+THUN     3.00000
+Name: 0.9, dtype: float64</pre>
 </div>
 
 </div>
@@ -15074,26 +15384,24 @@ Name: nature_mutation, dtype: int64</pre>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><strong><em>Utilisation de la librairie pandas_profiling pour une analyse automatique sur le jeu de données.
-Sélection que de la corrélation de Pearson pour la partie correlation afain de diminuer le temps d'analyse.</em></strong></p>
+<p><strong><em>Durant le traitement des données, pour les colonnes SNDP et PRCP on a vu que les valeurs manquantes ou l'abscence de neige/pluie étaient tagués de la même manière. J'avais assigné la valeur 0 dans ces cas. On se rend compte que la large majorité de ces valeurs sont des 0 dont on est pas sûr si se sont de vrais 0 ou s'il n'y a pas eu de mesure tout simplement.<br>
+Du fait du manque de confiance qu'on peut avoir en ces 2 colonnes, je décide de ne pas les utiliser.<br>
+Pour SNOW, HAIL et THUN, je décide de les garder car même si leurs distributions ne me convient pas, on peut à priori faire confiance en ces valeurs et qu'elles peuvent apporter des informations utiles au modèles.</em></strong></p>
 
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Par curisoité, voir les stations où il y a eu plus de 4 métres de neige enregistré en un mois</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">pandas_profiling</span> <span class="kn">import</span> <span class="n">ProfileReport</span>
-<span class="n">profile</span> <span class="o">=</span> <span class="n">ProfileReport</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;DVF 2019 raport initial&quot;</span><span class="p">,</span> <span class="n">html</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;inline&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">},</span> 
-                        <span class="n">correlations</span><span class="o">=</span><span class="p">{</span>
-                             <span class="s2">&quot;pearson&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;calculate&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-                             <span class="s2">&quot;spearman&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;calculate&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-                             <span class="s2">&quot;kendall&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;calculate&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-                             <span class="s2">&quot;phi_k&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;calculate&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-                             <span class="s2">&quot;cramers&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;calculate&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-                         <span class="p">})</span>
-<span class="n">profile</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="s2">&quot;../../../local_files/DVF_2019_raport_initial.html&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;SNDP&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">4000</span><span class="p">),</span> <span class="p">:]</span>
 </pre></div>
 
      </div>
@@ -15101,6 +15409,2381 @@ Sélection que de la corrélation de Pearson pour la partie correlation afain de
 </div>
 </div>
 
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[7]:</div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>DATE</th>
+      <th>STATION</th>
+      <th>TEMP</th>
+      <th>MAX</th>
+      <th>MIN</th>
+      <th>DEWP</th>
+      <th>WDSP</th>
+      <th>MXSPD</th>
+      <th>SNDP</th>
+      <th>PRCP</th>
+      <th>FOG</th>
+      <th>RAIN</th>
+      <th>SNOW</th>
+      <th>HAIL</th>
+      <th>THUN</th>
+      <th>NAME</th>
+      <th>COUNTRY</th>
+      <th>LATITUDE</th>
+      <th>LONGITUDE</th>
+      <th>ELEVATION</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>9216</th>
+      <td>2009-02</td>
+      <td>7560099999</td>
+      <td>-3.202222</td>
+      <td>7.111111</td>
+      <td>-11.222222</td>
+      <td>-6.193333</td>
+      <td>55.863728</td>
+      <td>122.04681</td>
+      <td>4097.528</td>
+      <td>1.41732</td>
+      <td>15.0</td>
+      <td>0.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>MONT AIGOUAL</td>
+      <td>France</td>
+      <td>44.116665</td>
+      <td>3.583333</td>
+      <td>1565.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;SNDP&quot;</span><span class="p">,</span> <span class="s2">&quot;PRCP&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Normalisation les données hormis les colonnes qui ne sont pas numériques</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">column_to_not_normalise</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">,</span> <span class="s2">&quot;STATION&quot;</span><span class="p">,</span> <span class="s2">&quot;COUNTRY&quot;</span><span class="p">,</span> <span class="s2">&quot;NAME&quot;</span><span class="p">]</span>
+<span class="n">column_to_normalise</span> <span class="o">=</span> <span class="p">[</span><span class="n">column</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">column_to_not_normalise</span><span class="p">]</span>
+<span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+                    <span class="o">/</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()))</span>
+<span class="n">df</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>DATE</th>
+      <th>STATION</th>
+      <th>TEMP</th>
+      <th>MAX</th>
+      <th>MIN</th>
+      <th>DEWP</th>
+      <th>WDSP</th>
+      <th>MXSPD</th>
+      <th>FOG</th>
+      <th>RAIN</th>
+      <th>SNOW</th>
+      <th>HAIL</th>
+      <th>THUN</th>
+      <th>NAME</th>
+      <th>COUNTRY</th>
+      <th>LATITUDE</th>
+      <th>LONGITUDE</th>
+      <th>ELEVATION</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2000-01</td>
+      <td>7770099999</td>
+      <td>0.456853</td>
+      <td>0.292526</td>
+      <td>0.627471</td>
+      <td>0.483662</td>
+      <td>0.457861</td>
+      <td>0.773099</td>
+      <td>0.000000</td>
+      <td>0.290323</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0000</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>0.000000</td>
+      <td>0.975771</td>
+      <td>0.072860</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2000-02</td>
+      <td>7770099999</td>
+      <td>0.503541</td>
+      <td>0.304124</td>
+      <td>0.693028</td>
+      <td>0.544980</td>
+      <td>0.484345</td>
+      <td>0.609357</td>
+      <td>0.000000</td>
+      <td>0.193548</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0000</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>0.000000</td>
+      <td>0.975771</td>
+      <td>0.072860</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2000-03</td>
+      <td>7770099999</td>
+      <td>0.524263</td>
+      <td>0.332474</td>
+      <td>0.711759</td>
+      <td>0.572502</td>
+      <td>0.480903</td>
+      <td>0.621053</td>
+      <td>0.000000</td>
+      <td>0.322581</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0000</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>0.000000</td>
+      <td>0.975771</td>
+      <td>0.072860</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2000-04</td>
+      <td>7770099999</td>
+      <td>0.570830</td>
+      <td>0.420103</td>
+      <td>0.745057</td>
+      <td>0.636547</td>
+      <td>0.534625</td>
+      <td>0.654971</td>
+      <td>0.000000</td>
+      <td>0.354839</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.1250</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>0.000000</td>
+      <td>0.975771</td>
+      <td>0.072860</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2000-05</td>
+      <td>7770099999</td>
+      <td>0.699661</td>
+      <td>0.529639</td>
+      <td>0.812695</td>
+      <td>0.749108</td>
+      <td>0.456690</td>
+      <td>0.513450</td>
+      <td>0.100000</td>
+      <td>0.193548</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0000</td>
+      <td>CAP PERTUSATO</td>
+      <td>France</td>
+      <td>0.000000</td>
+      <td>0.975771</td>
+      <td>0.072860</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>42582</th>
+      <td>2020-07</td>
+      <td>7121099999</td>
+      <td>0.667534</td>
+      <td>0.498711</td>
+      <td>0.818939</td>
+      <td>NaN</td>
+      <td>0.247130</td>
+      <td>0.235088</td>
+      <td>0.000000</td>
+      <td>0.129032</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0000</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>0.772805</td>
+      <td>0.171806</td>
+      <td>0.021672</td>
+    </tr>
+    <tr>
+      <th>42583</th>
+      <td>2020-08</td>
+      <td>7121099999</td>
+      <td>0.707247</td>
+      <td>0.599227</td>
+      <td>0.812695</td>
+      <td>NaN</td>
+      <td>0.227915</td>
+      <td>0.305263</td>
+      <td>0.000000</td>
+      <td>0.161290</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0625</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>0.772805</td>
+      <td>0.171806</td>
+      <td>0.021672</td>
+    </tr>
+    <tr>
+      <th>42584</th>
+      <td>2020-09</td>
+      <td>7121099999</td>
+      <td>0.656428</td>
+      <td>0.518041</td>
+      <td>0.763788</td>
+      <td>NaN</td>
+      <td>0.231316</td>
+      <td>0.341520</td>
+      <td>0.066667</td>
+      <td>0.161290</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0000</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>0.772805</td>
+      <td>0.171806</td>
+      <td>0.021672</td>
+    </tr>
+    <tr>
+      <th>42585</th>
+      <td>2020-10</td>
+      <td>7121099999</td>
+      <td>0.552367</td>
+      <td>0.422680</td>
+      <td>0.739854</td>
+      <td>NaN</td>
+      <td>0.321721</td>
+      <td>0.387135</td>
+      <td>0.000000</td>
+      <td>0.612903</td>
+      <td>0.0</td>
+      <td>0.166667</td>
+      <td>0.0625</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>0.772805</td>
+      <td>0.171806</td>
+      <td>0.021672</td>
+    </tr>
+    <tr>
+      <th>42586</th>
+      <td>2020-11</td>
+      <td>7121099999</td>
+      <td>0.523165</td>
+      <td>0.394330</td>
+      <td>0.695109</td>
+      <td>NaN</td>
+      <td>0.259241</td>
+      <td>0.315789</td>
+      <td>0.000000</td>
+      <td>0.258065</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0000</td>
+      <td>BREHAT ISLAND</td>
+      <td>France</td>
+      <td>0.772805</td>
+      <td>0.171806</td>
+      <td>0.021672</td>
+    </tr>
+  </tbody>
+</table>
+<p>42587 rows × 18 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Visualisation de la distribution suite à la normalisation</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[10]:</div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>STATION</th>
+      <th>TEMP</th>
+      <th>MAX</th>
+      <th>MIN</th>
+      <th>DEWP</th>
+      <th>WDSP</th>
+      <th>MXSPD</th>
+      <th>FOG</th>
+      <th>RAIN</th>
+      <th>SNOW</th>
+      <th>HAIL</th>
+      <th>THUN</th>
+      <th>LATITUDE</th>
+      <th>LONGITUDE</th>
+      <th>ELEVATION</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>4.258700e+04</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42112.000000</td>
+      <td>42356.000000</td>
+      <td>42343.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+      <td>42587.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>7.601723e+09</td>
+      <td>0.538045</td>
+      <td>0.502421</td>
+      <td>0.622096</td>
+      <td>0.572364</td>
+      <td>0.182008</td>
+      <td>0.266915</td>
+      <td>0.106397</td>
+      <td>0.346296</td>
+      <td>0.030734</td>
+      <td>0.016934</td>
+      <td>0.051624</td>
+      <td>0.512338</td>
+      <td>0.528522</td>
+      <td>0.101881</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>4.666629e+09</td>
+      <td>0.170281</td>
+      <td>0.173151</td>
+      <td>0.119481</td>
+      <td>0.138827</td>
+      <td>0.077924</td>
+      <td>0.102173</td>
+      <td>0.129111</td>
+      <td>0.204037</td>
+      <td>0.084501</td>
+      <td>0.068539</td>
+      <td>0.092380</td>
+      <td>0.253317</td>
+      <td>0.227759</td>
+      <td>0.126934</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>7.002100e+09</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>7.150100e+09</td>
+      <td>0.403186</td>
+      <td>0.356959</td>
+      <td>0.537981</td>
+      <td>0.464886</td>
+      <td>0.132157</td>
+      <td>0.200000</td>
+      <td>0.000000</td>
+      <td>0.193548</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.263052</td>
+      <td>0.369619</td>
+      <td>0.031986</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>7.330100e+09</td>
+      <td>0.533898</td>
+      <td>0.501289</td>
+      <td>0.612903</td>
+      <td>0.573760</td>
+      <td>0.167393</td>
+      <td>0.245614</td>
+      <td>0.066667</td>
+      <td>0.322581</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.539182</td>
+      <td>0.526670</td>
+      <td>0.063262</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>7.588100e+09</td>
+      <td>0.672266</td>
+      <td>0.645619</td>
+      <td>0.711759</td>
+      <td>0.691007</td>
+      <td>0.212060</td>
+      <td>0.315789</td>
+      <td>0.166667</td>
+      <td>0.483871</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.062500</td>
+      <td>0.740618</td>
+      <td>0.696758</td>
+      <td>0.113170</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>9.961710e+10</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Comme je souhaites clusteriser les stations, la prochaine étape va être de grouper les données par STATION uniquement. Les donnés actuel sont groupés par STATION et par DATE(année/mois). Je vais aggréger l'ensembles des données sur 20 ans de chaque station en une moyenne mensuel.<br>Avant ça, je sauvegarde en mémoire les données géographique qui n'ont pas à être aggréger et on les effaces de notre dataframe principal.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">normalised_df_stations</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s2">&quot;STATION&quot;</span><span class="p">,</span> <span class="s2">&quot;COUNTRY&quot;</span><span class="p">,</span> <span class="s2">&quot;NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;LATITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;LONGITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;ELEVATION&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s2">&quot;STATION&quot;</span><span class="p">)</span>
+<span class="c1"># effacement pour l&#39;aggregation des stats par mois sinon latitude longitude etc seront mensualises</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;COUNTRY&quot;</span><span class="p">,</span> <span class="s2">&quot;NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;LATITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;LONGITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;ELEVATION&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Convertion de la colonne DATE en type datetime
+<br>Regroupement des données par STATION et par mois uniquement (création d'une moyenne mensuel des 20 années)</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">])</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;MONTH&quot;</span><span class="p">)])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">df</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[12]:</div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th></th>
+      <th>TEMP</th>
+      <th>MAX</th>
+      <th>MIN</th>
+      <th>DEWP</th>
+      <th>WDSP</th>
+      <th>MXSPD</th>
+      <th>FOG</th>
+      <th>RAIN</th>
+      <th>SNOW</th>
+      <th>HAIL</th>
+      <th>THUN</th>
+    </tr>
+    <tr>
+      <th>STATION</th>
+      <th>MONTH</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="5" valign="top">7002099999</th>
+      <th>1</th>
+      <td>0.329798</td>
+      <td>0.218827</td>
+      <td>0.517120</td>
+      <td>0.423144</td>
+      <td>0.302193</td>
+      <td>0.364578</td>
+      <td>0.065079</td>
+      <td>0.457757</td>
+      <td>0.079365</td>
+      <td>0.047619</td>
+      <td>0.011905</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.331751</td>
+      <td>0.246257</td>
+      <td>0.538972</td>
+      <td>0.416343</td>
+      <td>0.288811</td>
+      <td>0.354330</td>
+      <td>0.069841</td>
+      <td>0.362519</td>
+      <td>0.068027</td>
+      <td>0.031746</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.381462</td>
+      <td>0.331124</td>
+      <td>0.580893</td>
+      <td>0.441136</td>
+      <td>0.266147</td>
+      <td>0.344417</td>
+      <td>0.069841</td>
+      <td>0.310292</td>
+      <td>0.036281</td>
+      <td>0.015873</td>
+      <td>0.002976</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.458716</td>
+      <td>0.440142</td>
+      <td>0.627367</td>
+      <td>0.500185</td>
+      <td>0.229511</td>
+      <td>0.275146</td>
+      <td>0.076667</td>
+      <td>0.266129</td>
+      <td>0.004762</td>
+      <td>0.008333</td>
+      <td>0.012500</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0.533491</td>
+      <td>0.514605</td>
+      <td>0.683712</td>
+      <td>0.586761</td>
+      <td>0.235826</td>
+      <td>0.300473</td>
+      <td>0.084127</td>
+      <td>0.310292</td>
+      <td>0.000000</td>
+      <td>0.007937</td>
+      <td>0.053571</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th rowspan="5" valign="top">99617099999</th>
+      <th>8</th>
+      <td>0.838565</td>
+      <td>0.557990</td>
+      <td>0.949272</td>
+      <td>0.894313</td>
+      <td>0.290098</td>
+      <td>0.421345</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>0.772461</td>
+      <td>0.570232</td>
+      <td>0.879292</td>
+      <td>0.820889</td>
+      <td>0.349112</td>
+      <td>0.415205</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>0.699355</td>
+      <td>0.458441</td>
+      <td>0.833247</td>
+      <td>0.774449</td>
+      <td>0.369430</td>
+      <td>0.406140</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>0.592901</td>
+      <td>0.381443</td>
+      <td>0.769251</td>
+      <td>0.628778</td>
+      <td>0.428006</td>
+      <td>0.461988</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>0.527089</td>
+      <td>0.307023</td>
+      <td>0.729709</td>
+      <td>0.545215</td>
+      <td>0.447440</td>
+      <td>0.533041</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+  </tbody>
+</table>
+<p>2597 rows × 11 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>J'unstack l'index au niveau de MONTH pour avoir seulement les STATION en index au niveau des lignes. Je créer de cette façon un multi-index au niveau des colonnes. <br> J'ai donc maintenant 132 features pour chaque STATION qui correspondent aux mesures météorologiques pour chaque mois.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[13]:</div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="10" halign="left">TEMP</th>
+      <th>...</th>
+      <th colspan="10" halign="left">THUN</th>
+    </tr>
+    <tr>
+      <th>MONTH</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>...</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+    </tr>
+    <tr>
+      <th>STATION</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>7002099999</th>
+      <td>0.329798</td>
+      <td>0.331751</td>
+      <td>0.381462</td>
+      <td>0.458716</td>
+      <td>0.533491</td>
+      <td>0.611905</td>
+      <td>0.667052</td>
+      <td>0.680888</td>
+      <td>0.628076</td>
+      <td>0.541373</td>
+      <td>...</td>
+      <td>0.002976</td>
+      <td>0.012500</td>
+      <td>0.053571</td>
+      <td>0.041667</td>
+      <td>0.050595</td>
+      <td>0.035714</td>
+      <td>0.017857</td>
+      <td>0.044643</td>
+      <td>0.041667</td>
+      <td>0.011905</td>
+    </tr>
+    <tr>
+      <th>7003099999</th>
+      <td>0.326724</td>
+      <td>0.332245</td>
+      <td>0.382345</td>
+      <td>0.462242</td>
+      <td>0.544422</td>
+      <td>0.626452</td>
+      <td>0.677832</td>
+      <td>0.680006</td>
+      <td>0.623824</td>
+      <td>0.536390</td>
+      <td>...</td>
+      <td>0.006579</td>
+      <td>0.013889</td>
+      <td>0.052632</td>
+      <td>0.049342</td>
+      <td>0.046053</td>
+      <td>0.059028</td>
+      <td>0.027344</td>
+      <td>0.024306</td>
+      <td>0.034722</td>
+      <td>0.013158</td>
+    </tr>
+    <tr>
+      <th>7005099999</th>
+      <td>0.307812</td>
+      <td>0.318340</td>
+      <td>0.379297</td>
+      <td>0.462423</td>
+      <td>0.545179</td>
+      <td>0.630113</td>
+      <td>0.681283</td>
+      <td>0.682481</td>
+      <td>0.610994</td>
+      <td>0.519923</td>
+      <td>...</td>
+      <td>0.005952</td>
+      <td>0.034375</td>
+      <td>0.056548</td>
+      <td>0.101190</td>
+      <td>0.095238</td>
+      <td>0.083333</td>
+      <td>0.029762</td>
+      <td>0.026786</td>
+      <td>0.029762</td>
+      <td>0.020833</td>
+    </tr>
+    <tr>
+      <th>7009099999</th>
+      <td>0.337504</td>
+      <td>0.336800</td>
+      <td>0.395108</td>
+      <td>0.459258</td>
+      <td>0.546029</td>
+      <td>0.627228</td>
+      <td>0.681371</td>
+      <td>0.687242</td>
+      <td>0.622506</td>
+      <td>0.538850</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>7010099999</th>
+      <td>0.343231</td>
+      <td>0.344667</td>
+      <td>0.391580</td>
+      <td>0.470019</td>
+      <td>0.554278</td>
+      <td>0.634481</td>
+      <td>0.692741</td>
+      <td>0.703480</td>
+      <td>0.645429</td>
+      <td>0.549967</td>
+      <td>...</td>
+      <td>0.006250</td>
+      <td>0.011029</td>
+      <td>0.023026</td>
+      <td>0.044643</td>
+      <td>0.035714</td>
+      <td>0.056548</td>
+      <td>0.029605</td>
+      <td>0.026316</td>
+      <td>0.009868</td>
+      <td>0.009868</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>7790099999</th>
+      <td>0.436882</td>
+      <td>0.443026</td>
+      <td>0.500502</td>
+      <td>0.577296</td>
+      <td>0.681013</td>
+      <td>0.802084</td>
+      <td>0.882489</td>
+      <td>0.884459</td>
+      <td>0.779790</td>
+      <td>0.673501</td>
+      <td>...</td>
+      <td>0.112500</td>
+      <td>0.101974</td>
+      <td>0.187500</td>
+      <td>0.215625</td>
+      <td>0.175000</td>
+      <td>0.209375</td>
+      <td>0.284375</td>
+      <td>0.203125</td>
+      <td>0.206250</td>
+      <td>0.106250</td>
+    </tr>
+    <tr>
+      <th>7791099999</th>
+      <td>0.471271</td>
+      <td>0.476069</td>
+      <td>0.505472</td>
+      <td>0.601363</td>
+      <td>0.708955</td>
+      <td>0.792706</td>
+      <td>0.898707</td>
+      <td>0.888267</td>
+      <td>0.804847</td>
+      <td>0.695328</td>
+      <td>...</td>
+      <td>0.046875</td>
+      <td>0.031250</td>
+      <td>0.062500</td>
+      <td>0.089286</td>
+      <td>0.031250</td>
+      <td>0.085938</td>
+      <td>0.140625</td>
+      <td>0.132812</td>
+      <td>0.125000</td>
+      <td>0.062500</td>
+    </tr>
+    <tr>
+      <th>99587099999</th>
+      <td>0.478288</td>
+      <td>0.437197</td>
+      <td>0.447689</td>
+      <td>0.478025</td>
+      <td>0.524925</td>
+      <td>0.626036</td>
+      <td>0.654602</td>
+      <td>0.681535</td>
+      <td>0.645507</td>
+      <td>0.576750</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>99608099999</th>
+      <td>0.480280</td>
+      <td>0.464540</td>
+      <td>0.514399</td>
+      <td>0.567621</td>
+      <td>0.675490</td>
+      <td>0.800121</td>
+      <td>0.839695</td>
+      <td>0.859427</td>
+      <td>0.768051</td>
+      <td>0.681502</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>99617099999</th>
+      <td>0.504050</td>
+      <td>0.489634</td>
+      <td>0.529117</td>
+      <td>0.549184</td>
+      <td>0.624156</td>
+      <td>0.741381</td>
+      <td>0.796460</td>
+      <td>0.838565</td>
+      <td>0.772461</td>
+      <td>0.699355</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+  </tbody>
+</table>
+<p>217 rows × 132 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Je drop les STATIONS qui auraient des features manquantes, ces stations n'ont jamais émis l'équivalent d'une année complète de mesures ou des mesures en particulier leurs sont manquantes. Je perds 10 stations sur 217.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+<span class="n">df</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[14]:</div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="10" halign="left">TEMP</th>
+      <th>...</th>
+      <th colspan="10" halign="left">THUN</th>
+    </tr>
+    <tr>
+      <th>MONTH</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>...</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+    </tr>
+    <tr>
+      <th>STATION</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>7002099999</th>
+      <td>0.329798</td>
+      <td>0.331751</td>
+      <td>0.381462</td>
+      <td>0.458716</td>
+      <td>0.533491</td>
+      <td>0.611905</td>
+      <td>0.667052</td>
+      <td>0.680888</td>
+      <td>0.628076</td>
+      <td>0.541373</td>
+      <td>...</td>
+      <td>0.002976</td>
+      <td>0.012500</td>
+      <td>0.053571</td>
+      <td>0.041667</td>
+      <td>0.050595</td>
+      <td>0.035714</td>
+      <td>0.017857</td>
+      <td>0.044643</td>
+      <td>0.041667</td>
+      <td>0.011905</td>
+    </tr>
+    <tr>
+      <th>7003099999</th>
+      <td>0.326724</td>
+      <td>0.332245</td>
+      <td>0.382345</td>
+      <td>0.462242</td>
+      <td>0.544422</td>
+      <td>0.626452</td>
+      <td>0.677832</td>
+      <td>0.680006</td>
+      <td>0.623824</td>
+      <td>0.536390</td>
+      <td>...</td>
+      <td>0.006579</td>
+      <td>0.013889</td>
+      <td>0.052632</td>
+      <td>0.049342</td>
+      <td>0.046053</td>
+      <td>0.059028</td>
+      <td>0.027344</td>
+      <td>0.024306</td>
+      <td>0.034722</td>
+      <td>0.013158</td>
+    </tr>
+    <tr>
+      <th>7005099999</th>
+      <td>0.307812</td>
+      <td>0.318340</td>
+      <td>0.379297</td>
+      <td>0.462423</td>
+      <td>0.545179</td>
+      <td>0.630113</td>
+      <td>0.681283</td>
+      <td>0.682481</td>
+      <td>0.610994</td>
+      <td>0.519923</td>
+      <td>...</td>
+      <td>0.005952</td>
+      <td>0.034375</td>
+      <td>0.056548</td>
+      <td>0.101190</td>
+      <td>0.095238</td>
+      <td>0.083333</td>
+      <td>0.029762</td>
+      <td>0.026786</td>
+      <td>0.029762</td>
+      <td>0.020833</td>
+    </tr>
+    <tr>
+      <th>7009099999</th>
+      <td>0.337504</td>
+      <td>0.336800</td>
+      <td>0.395108</td>
+      <td>0.459258</td>
+      <td>0.546029</td>
+      <td>0.627228</td>
+      <td>0.681371</td>
+      <td>0.687242</td>
+      <td>0.622506</td>
+      <td>0.538850</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>7010099999</th>
+      <td>0.343231</td>
+      <td>0.344667</td>
+      <td>0.391580</td>
+      <td>0.470019</td>
+      <td>0.554278</td>
+      <td>0.634481</td>
+      <td>0.692741</td>
+      <td>0.703480</td>
+      <td>0.645429</td>
+      <td>0.549967</td>
+      <td>...</td>
+      <td>0.006250</td>
+      <td>0.011029</td>
+      <td>0.023026</td>
+      <td>0.044643</td>
+      <td>0.035714</td>
+      <td>0.056548</td>
+      <td>0.029605</td>
+      <td>0.026316</td>
+      <td>0.009868</td>
+      <td>0.009868</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>7785099999</th>
+      <td>0.489139</td>
+      <td>0.478579</td>
+      <td>0.531011</td>
+      <td>0.618466</td>
+      <td>0.710986</td>
+      <td>0.827231</td>
+      <td>0.905370</td>
+      <td>0.901966</td>
+      <td>0.818139</td>
+      <td>0.715929</td>
+      <td>...</td>
+      <td>0.015625</td>
+      <td>0.008929</td>
+      <td>0.011719</td>
+      <td>0.020833</td>
+      <td>0.014706</td>
+      <td>0.015625</td>
+      <td>0.035156</td>
+      <td>0.046875</td>
+      <td>0.062500</td>
+      <td>0.019531</td>
+    </tr>
+    <tr>
+      <th>7790099999</th>
+      <td>0.436882</td>
+      <td>0.443026</td>
+      <td>0.500502</td>
+      <td>0.577296</td>
+      <td>0.681013</td>
+      <td>0.802084</td>
+      <td>0.882489</td>
+      <td>0.884459</td>
+      <td>0.779790</td>
+      <td>0.673501</td>
+      <td>...</td>
+      <td>0.112500</td>
+      <td>0.101974</td>
+      <td>0.187500</td>
+      <td>0.215625</td>
+      <td>0.175000</td>
+      <td>0.209375</td>
+      <td>0.284375</td>
+      <td>0.203125</td>
+      <td>0.206250</td>
+      <td>0.106250</td>
+    </tr>
+    <tr>
+      <th>7791099999</th>
+      <td>0.471271</td>
+      <td>0.476069</td>
+      <td>0.505472</td>
+      <td>0.601363</td>
+      <td>0.708955</td>
+      <td>0.792706</td>
+      <td>0.898707</td>
+      <td>0.888267</td>
+      <td>0.804847</td>
+      <td>0.695328</td>
+      <td>...</td>
+      <td>0.046875</td>
+      <td>0.031250</td>
+      <td>0.062500</td>
+      <td>0.089286</td>
+      <td>0.031250</td>
+      <td>0.085938</td>
+      <td>0.140625</td>
+      <td>0.132812</td>
+      <td>0.125000</td>
+      <td>0.062500</td>
+    </tr>
+    <tr>
+      <th>99608099999</th>
+      <td>0.480280</td>
+      <td>0.464540</td>
+      <td>0.514399</td>
+      <td>0.567621</td>
+      <td>0.675490</td>
+      <td>0.800121</td>
+      <td>0.839695</td>
+      <td>0.859427</td>
+      <td>0.768051</td>
+      <td>0.681502</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>99617099999</th>
+      <td>0.504050</td>
+      <td>0.489634</td>
+      <td>0.529117</td>
+      <td>0.549184</td>
+      <td>0.624156</td>
+      <td>0.741381</td>
+      <td>0.796460</td>
+      <td>0.838565</td>
+      <td>0.772461</td>
+      <td>0.699355</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+  </tbody>
+</table>
+<p>207 rows × 132 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Je peux remerge ce dataframe avec le dataframe géographique que j'avais garder en mémoire (correspond à un full inner join en SQL ici). <br> Ou je décide de pas utiliser la LATITUDE, la LONGITUDE et l'ELEVATION.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#df = pd.merge(left=df, right=normalised_df_stations, how=&quot;inner&quot;, left_on=&quot;STATION&quot;, right_on=&quot;STATION&quot;)</span>
+<span class="c1">#df</span>
+<span class="c1"># si je souhaites applatir le multi-index</span>
+<span class="c1">#df.columns = df.columns.to_flat_index()</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Finalement, l'étape de clusteristion.<br> Création d'un dataframe df_results qui va servir stocker les résultats (le numéro de cluster assigné à chaque station).
+<br>Création d'un dictionnaire Python pour stocker les scores des clusterisations en fonction de K (le nombre de groupes que l'algorithme doit créer).
+<br>Boucle pour faire 9 clusterisations en faisant varier K de 2 à 10.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[16]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#df_results = df[[&quot;STATION&quot;]].copy()</span>
+<span class="c1"># ou si STATION est en index</span>
+<span class="n">df_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">k_scores</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;k&quot;</span><span class="p">:[],</span> <span class="s2">&quot;inertia&quot;</span><span class="p">:[],</span> <span class="s2">&quot;silhouette&quot;</span><span class="p">:[]}</span>
+<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+    <span class="n">K_means</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>       
+    <span class="n">name_colonne</span> <span class="o">=</span> <span class="n">k</span>
+    <span class="n">df_results</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">name_colonne</span><span class="p">]</span> <span class="o">=</span> <span class="n">K_means</span><span class="o">.</span><span class="n">labels_</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">k_scores</span><span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="c1"># Sum of squared distances of samples to their closest cluster center</span>
+    <span class="n">k_scores</span><span class="p">[</span><span class="s2">&quot;inertia&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">K_means</span><span class="o">.</span><span class="n">inertia_</span><span class="p">)</span>
+    <span class="c1"># Silhouete_score</span>
+    <span class="n">k_scores</span><span class="p">[</span><span class="s2">&quot;silhouette&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">silhouette_score</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">K_means</span><span class="o">.</span><span class="n">labels_</span><span class="p">))</span>
+    
+<span class="n">df_results</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[16]:</div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+    </tr>
+    <tr>
+      <th>STATION</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>7002099999</th>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>5</td>
+      <td>1</td>
+      <td>4</td>
+      <td>7</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>7003099999</th>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>5</td>
+      <td>7</td>
+      <td>5</td>
+      <td>4</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>7005099999</th>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>4</td>
+      <td>4</td>
+      <td>2</td>
+      <td>6</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>7009099999</th>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+      <td>4</td>
+      <td>4</td>
+      <td>2</td>
+      <td>6</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>7010099999</th>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>5</td>
+      <td>1</td>
+      <td>4</td>
+      <td>7</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>7785099999</th>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>4</td>
+      <td>2</td>
+      <td>5</td>
+      <td>8</td>
+      <td>9</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>7790099999</th>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>6</td>
+      <td>3</td>
+      <td>2</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>7791099999</th>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>4</td>
+      <td>3</td>
+      <td>6</td>
+      <td>3</td>
+      <td>9</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>99608099999</th>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>4</td>
+      <td>2</td>
+      <td>5</td>
+      <td>8</td>
+      <td>9</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>99617099999</th>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>4</td>
+      <td>2</td>
+      <td>5</td>
+      <td>8</td>
+      <td>9</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+<p>207 rows × 9 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[17]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scores_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">k_scores</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>
+<span class="n">scores_df</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[17]:</div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>k</th>
+      <th>inertia</th>
+      <th>silhouette</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2</td>
+      <td>92.577978</td>
+      <td>0.347249</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3</td>
+      <td>77.599971</td>
+      <td>0.310673</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>4</td>
+      <td>68.194961</td>
+      <td>0.298085</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>5</td>
+      <td>60.760273</td>
+      <td>0.298168</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>6</td>
+      <td>54.469872</td>
+      <td>0.223880</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>7</td>
+      <td>50.372231</td>
+      <td>0.198276</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>8</td>
+      <td>45.613791</td>
+      <td>0.202842</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>9</td>
+      <td>43.664313</td>
+      <td>0.191424</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>10</td>
+      <td>41.895218</td>
+      <td>0.179600</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Visualisation des scores pour déterminer le K optimal.
+<br>Dans le premier graphique, "inertia" correspond à la somme des distance au carré entre les points et le centre du cluster qui leurs est assigné. Plus cette valeur est petite plus les clusters sont denses. Le but de la courbe est de trouver le nombre K minimal à partir duquel la baisse de la valeur devient minime. Cette méthode s'appelle la méthode Elbow. Ici, il semble ne pas vraiment avoir de K optimal, hormis peut être 8.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[18]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scores_df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;inertia&quot;</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[18]:</div>
+
+
+
+
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
+<pre>&lt;AxesSubplot:xlabel=&#39;k&#39;&gt;</pre>
+</div>
+
+</div>
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedImage jp-OutputArea-output ">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXAAAAEGCAYAAAB8Ys7jAAAAOXRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjMuMywgaHR0cHM6Ly9tYXRwbG90bGliLm9yZy/Il7ecAAAACXBIWXMAAAsTAAALEwEAmpwYAAAlZUlEQVR4nO3dd3hUZd7/8fc3HZJAIIRQAgQI0nvoFiyIq9hRWRuWFVy7+/xcfbZY9vFxLfu4q6urYluwASIK1hVFRKUoTXongYQAoQYCIe3+/ZEBEYFMyCRnJvm8rotrZo4zZz7kkk/uueec+5hzDhERCT1hXgcQEZGTowIXEQlRKnARkRClAhcRCVEqcBGREBVRnW/WqFEjl5qaWp1vKSIS8ubPn7/dOZd09PZqLfDU1FTmzZtXnW8pIhLyzCzzWNs1hSIiEqJU4CIiIUoFLiISoqp1DlxE5EhFRUVkZWVRUFDgdZSgEBMTQ0pKCpGRkX49XwUuIp7JysoiPj6e1NRUzMzrOJ5yzrFjxw6ysrJo3bq1X6/RFIqIeKagoIDExMRaX94AZkZiYmKFPo2owEXEUyrvn1T0ZxESBf7F8q2M/36j1zFERIJKSBT4hHmbeGjqMjK253sdRURqmIEDBwZsXx988AHLly8//PjBBx/kiy++CNj+jxYSBf7oJV2Iigjj/vcWU1qqC1CISODMmjUrIPspLi7+RYH/5S9/4ZxzzgnI/o8lJAo8uV4Mf7qgI3M37ORtTaWISADFxcUBMGPGDAYPHszw4cPp0KED11xzDYeuWDZ//nzOOOMMevfuzdChQ8nJyQFg8ODB3HPPPaSnp/PEE08wdepU7rvvPnr06MG6deu44YYbmDRpElBW5n369KFLly6MGjWKQFwNLWQOI7wyvQUf/pjD45+u5KwOjWmWUMfrSCISQI98uIzlm/MCus9Ozerx0IWd/X7+woULWbZsGc2aNWPQoEF899139OvXjzvvvJMpU6aQlJTEhAkT+OMf/8hrr70GQGFh4eE1ntasWcOwYcMYPnz4L/Z9xx138OCDDwJw3XXX8dFHH3HhhRdW6u8XEiNwKPt29q+XdaWk1PGH95cE5LeXiMiR+vbtS0pKCmFhYfTo0YOMjAxWrVrF0qVLGTJkCD169ODRRx8lKyvr8Guuuuoqv/b91Vdf0a9fP7p27cr06dNZtmxZpfOGzAgcoEXDutw3tD1/+Wg5HyzK5tKeKV5HEpEAqchIuapER0cfvh8eHk5xcTHOOTp37szs2bOP+ZrY2Nhy91tQUMBtt93GvHnzaNGiBQ8//HBAzj4NmRH4ISMHptKrZQKPfLic3L0HvY4jIjVc+/btyc3NPVzgRUVFxx09x8fHs3fv3l9sP1TWjRo1Yt++fYfnxSvLrwI3s7vNbKmZLTOze3zbGprZNDNb47ttEJBE5QgPM54c3o39B0t4eGrlP4KIiJxIVFQUkyZN4v7776d79+706NHjuEeujBgxgqeeeoqePXuybt26w9sTEhK45ZZb6NKlC0OHDqVPnz4ByWblzSWbWRdgPNAXKAQ+A24FRgE7nXOPm9kDQAPn3P0n2ld6eroL1AUdnpu+hr99vpoXr+3NeV2aBGSfIlK9VqxYQceOHb2OEVSO9TMxs/nOufSjn+vPCLwjMNc5t985Vwx8DVwGXAyM9T1nLHBJZUJX1Ogz2tKpaT3+PGUpe/YXVedbi4gEBX8KfClwmpklmlld4HygBZDsnMvxPWcLkHysF5vZKDObZ2bzcnNzAxIaIDI8jCeHd2NnfiGPfry8/BeIiNQw5Ra4c24F8ATwOWXTJ4uAkqOe44BjzsU458Y459Kdc+lJSb+4JmeldGlen9Gnt+Hd+VnMXB24Xw4iUn10SPBPKvqz8OtLTOfcq8653s6504FdwGpgq5k1BfDdbqtg1oC46+x2tEmK5b8nLyH/YLEXEUTkJMXExLBjxw6VOD+tBx4TE+P3a/w6DtzMGjvntplZS8rmv/sDrYGRwOO+2ykVj1x5MZHhPHl5N654aTZP/WcVD1/k/bGkIuKflJQUsrKyCOT0aig7dEUef/l7Is97ZpYIFAG3O+d2m9njwEQzuxnIBK6scNoASU9tyMgBqYydncGwbk1JT23oVRQRqYDIyEi/rz4jv1TuYYSBFMjDCI+Wf7CYc/8+k+jIMD656zRiIsOr5H1ERKpbZQ4jDAmx0RH89bKurM/N59kv13gdR0SkytWYAgc4/ZQkruidwksz17M0e4/XcUREqlSNKnCAP13QiYaxUfx+0mKKSkq9jiMiUmVqXIHXrxvJ/1zcheU5eYyZud7rOCIiVabGFTjAeV2acEHXpjzzxRrWbvvlymAiIjVBjSxwgIcv6kzd6HB+P2kxJbqOpojUQDW2wJPio3nowk4s2LibsbMyvI4jIhJwNbbAAS7p0ZzB7ZN46j+r2LRzv9dxREQCqkYXuJnx2KVdCQ8z/nuyrqMpIjVLjS5wgGYJdXjgVx34du12Js7b5HUcEZGAqfEFDnB135b0a92QRz9ewda8yl9IVEQkGNSKAg8LMx6/vBuFxaX88f2lmkoRkRqhVhQ4QOtGsfzXuafwxYqtfLQ4p/wXiIgEuVpT4AA3DWpN95T6PDx1GTvzC72OIyJSKbWqwCPCw3hyeHfyCop45MNlXscREamUWlXgAO2bxHPb4DSmLNrMlyu2eh1HROSk1boCB7j9zDTaJ8fzx/eXkldQ5HUcEZGTUisLPCoijCeGd2Pb3gL++slKr+OIiJyUWlngAD1aJHDzqa155/uNzFq33es4IiIVVmsLHOB3Q9qTmliXB95bwoHCEq/jiIhUSK0u8DpR4Tx+eTc27tzP/32+yus4IiIVUqsLHKB/m0Su6deS177bwMKNu7yOIyLit1pf4AAP/KoDyfVi+P2kxRws1lSKiIQGFTgQHxPJY5d2Zc22fTz/1Tqv44iI+EUF7nNmh8Zc2rM5//pqLSty8ryOIyJSLhX4ER4c1on6dSL5/aTFFJeUeh1HROSEVOBHaBAbxSMXd2ZJ9h5e/XaD13FERE5IBX6UC7o25dxOyTw9bTXrc/d5HUdE5LhU4EcxMx69pAvREWE88N4SSkt18QcRCU4q8GNoXC+GPw3rxPcZO3lrbqbXcUREjsmvAjeze81smZktNbN3zCzGzFqb2VwzW2tmE8wsqqrDVqcreqdwWrtGPP7pSrJ3H/A6jojIL5Rb4GbWHLgLSHfOdQHCgRHAE8DfnXNpwC7g5qoMWt3MjMcu7YoD/jB5ia6jKSJBx98plAigjplFAHWBHOAsYJLvv48FLgl4Oo+1aFiX3w9tz9erc5m8INvrOCIiP1NugTvnsoG/ARspK+49wHxgt3Ou2Pe0LKD5sV5vZqPMbJ6ZzcvNzQ1M6mp0/YBUerdqwF8+Ws62vQVexxEROcyfKZQGwMVAa6AZEAuc5+8bOOfGOOfSnXPpSUlJJx3UK2FhxhOXd+NAUQkPT9V1NEUkePgzhXIOsME5l+ucKwImA4OABN+UCkAKUGPnGNIax3H32e34ZMkWPlua43UcERHAvwLfCPQ3s7pmZsDZwHLgK2C47zkjgSlVEzE4jDq9DZ2b1eNPHyxj9/5Cr+OIiPg1Bz6Xsi8rFwBLfK8ZA9wP/M7M1gKJwKtVmNNzkeFhPHF5N3btL+R/PlrhdRwRESLKfwo45x4CHjpq83qgb8ATBbEuzetz6xlteP6rdVzUoxlnnBJ6c/oiUnPoTMwKuvOsdrRNiuUPk5ew72Bx+S8QEakiKvAKiokM58nh3di85wBPfrbS6zgiUoupwE9C71YNGTkglXGzM/l+w06v44hILaUCP0n3DW1PSoM63DthERt37Pc6jojUQirwkxQbHcGL1/Ymv7CYK1+azTqtHS4i1UwFXgldmtfnnVv6U1xaylUvzWHVlr1eRxKRWkQFXkkdm9Zj/KgBhIfBiDGzWZq9x+tIIlJLqMADIK1xHBNHD6BuVAS/fnkOCzbu8jqSiNQCKvAAaZUYy8RbB9AwNorrXpnL3PU7vI4kIjWcCjyAmifUYeLoATSpH8PI17/nmzWht3yuiIQOFXiAJdeLYcLoAaQmxnLz2Hl8uWKr15FEpIZSgVeBRnHRjB/Vnw5N4hn9xnw+XaIlaEUk8FTgVSShbhRv/qYf3VskcMc7C/lgYY1dLl1EPKICr0L1YiIZd1Nf+qQ24N6Ji5jww0avI4lIDaICr2Kx0RH8+8a+nNYuifvfW8K42RleRxKRGkIFXg1iIsN5+freDOmUzINTljFm5jqvI4lIDaACrybREeH865peXNCtKY99spJnv1yDc87rWCISwvy6Io8ERmR4GM9c1YPoiDCenraagqIS7hvanrJLjYqIVIwKvJpFhIfxt+Hdy0bkM9ZRUFTKn4d1VImLSIWpwD0QFmY8dmkXoiPCeO27DRQUl/DoxV0IC1OJi4j/VOAeMTMeurATdaLCeWHGOg4WlfLk8G6Eq8RFxE8qcA+ZGb8f2p6YiHD+/sVqDhaX8PerehAZru+WRaR8KnCPmRl3n9OOmMgw/vrpSgqLS/nn1T2Jjgj3OpqIBDkN9YLE6DPa8shFnfl8+VZGjZtPQVGJ15FEJMipwIPIyIGpPH5ZV2auyeXG138g/2Cx15FEJIipwIPMiL4tefrK7szdsIORr31PXkGR15FEJEipwIPQpT1TeO7qXizatJtrX5nL7v2FXkcSkSCkAg9S53dtyovX9mZlzl5GjJnD9n0HvY4kIkFGBR7EzumUzCsj08nYkc+IMXPYmlfgdSQRCSIq8CB3+ilJ/PvGvmzefYCrXppN9u4DXkcSkSBRboGbWXszW3TEnzwzu8fMGprZNDNb47ttUB2Ba6P+bRJ54+Z+7NhXyJUvziZzR77XkUQkCJRb4M65Vc65Hs65HkBvYD/wPvAA8KVzrh3wpe+xVJHerRrw9i39yS8s5sqXZrN22z6vI4mIxyo6hXI2sM45lwlcDIz1bR8LXBLAXHIMXVPqM35Uf0pKHSPGzGblljyvI4mIhypa4COAd3z3k51zhy63vgVIPtYLzGyUmc0zs3m5ubknGVMO6dCkHuNHDSA8zBgxZg5Ls/d4HUlEPOJ3gZtZFHAR8O7R/82VXVrmmJeXcc6Ncc6lO+fSk5KSTjqo/CStcRwTRw8gNiqCX788h/mZu7yOJCIeqMgI/FfAAufcVt/jrWbWFMB3uy3Q4eT4WiXGMvHWASTGRnH9q3OZs36H15FEpJpVpMB/zU/TJwBTgZG++yOBKYEKJf5pnlCHCaMH0DShDje8/j0zV2uKSqQ28avAzSwWGAJMPmLz48AQM1sDnON7LNUsuV4M40f1JzUxlt+MnccXy7eW/yIRqRH8KnDnXL5zLtE5t+eIbTucc2c759o5585xzu2suphyIo3iohk/qj8dmsZz65vz+WRJTvkvEpGQpzMxa4iEulG8+Zt+dG+RwB1vL2DygiyvI4lIFVOB1yD1YiIZd1Nf+rVO5HcTf+SRD5dRWFzqdSwRqSIq8BomNjqCsTf15YaBqbz+XQZXjdH6KSI1lQq8BoqKCOPhizrz/NW9WLN1H8Oe/YYZq3SUp0hNowKvwS7o1pSpdwwiuV4MN/77B/7v81WUlB7zfCsRCUEq8BquTVIcH9w+iCt6p/DP6Wu57tW55O7VxSFEagIVeC0QExnOk8O789TwbizYuIsLnv2GuTpzUyTkqcBrkSvSW/DB7YOIi47g6lfm8sKMdZRqSkUkZKnAa5kOTeox5Y5BnNelCU98tpJbxs3TRZNFQpQKvBaKj4nkuV/35JGLOjNzTS4XPPstP27a7XUsEakgFXgtZWaMHJjKu7cOBOCKF2czbnYGZSsDi0goUIHXcj1aJPDRnacyKC2RB6cs467xi9h3sNjrWCLiBxW40CA2ildH9uG+oe35ePFmLnruW1Zt2et1LBEphwpcAAgLM24/M423ftOfvAPFXPz8t7w3XwtiiQQzFbj8zIC2iXxy96n0aJHAf737Iw+8t5iCohKvY4nIMajA5Rcax8fw5s39uP3Mtoz/YROX/WsWGdvzvY4lIkdRgcsxRYSHcd/QDrx+Qx827znAhf/8ls+W6kIRIsFEBS4ndGaHxnx056m0aRzHrW8u4C8fLtca4yJBQgUu5UppUJd3Rw/ghoGpvPbdBkaMmc1mrTEu4jkVuPjlyDXGV23ZywVaY1zEcypwqZALujXlwztPPbzG+NNaY1zEMypwqbA2SXG8f9sghvdK4dnpa7n+tbls36c1xkWqmwpcTkqdqHCeuqI7T17ejXkZuzj/mW/4fsNOr2OJ1CoqcKmUK/u04P3bBhEbHcGvX57Di1+v04JYItVEBS6V1qlZPabeMYihnZN5/NOV3DJuPnv2F3kdS6TGU4FLQMTHRPL81b146MJOfL16Gxf88xuWZO3xOpZIjaYCl4AxM24c1JqJowdQWuq4/IVZvDEnU1MqIlVEBS4B17NlAz6+6zQGpiXy5w+Wcvf4ReRrjXGRgFOBS5VoEBvFa741xj/yrTG+eqvWGBcJJBW4VJlDa4y/+Zt+7DlQzMXPfcek+VmaUhEJEL8K3MwSzGySma00sxVmNsDMGprZNDNb47ttUNVhJTQNbNuIT+46lW4p9fl/7/7ITf/+QWupiASAvyPwZ4DPnHMdgO7ACuAB4EvnXDvgS99jkWNqXC+Gt2/pz5+HdWLO+p0Mefpr3pidQalOwxc5aVbex1kzqw8sAtq4I55sZquAwc65HDNrCsxwzrU/0b7S09PdvHnzKp9aQtqmnfv5w/tL+GbNdvqkNuCvl3UjrXGc17FEgpaZzXfOpR+93Z8ReGsgF3jdzBaa2StmFgskO+cOrfC/BUg+zhuPMrN5ZjYvNzf3ZPNLDdKiYV3G3dSXv13RndVb93H+M9/w3PQ1FJVonXGRivCnwCOAXsALzrmeQD5HTZf4RubHHMo758Y459Kdc+lJSUmVzSs1hJkxvHcKX/zuDIZ0SuZvn6/mwn9+y+Ks3V5HEwkZ/hR4FpDlnJvrezyJskLf6ps6wXerxaGlwpLio3n+ml6Mua43u/YXcsnz3/G/Hy/nQKEupCxSnnIL3Dm3BdhkZofmt88GlgNTgZG+bSOBKVWSUGqFczs3YdrvzuCqPi15+ZsNDP3HTGat3e51LJGgVu6XmABm1gN4BYgC1gM3Ulb+E4GWQCZwpXPuhOuJ6ktM8cec9Tt44L3FZOzYz1XpLfjD+R2pXzfS61ginjnel5h+FXigqMDFXwVFJfzjizW8/M16GsZG8T8Xd+a8Lk29jiXiicochSJS7WIiw3ngVx2YcvsgGsdHc+ubC7j1jflsyyvwOppI0FCBS1Dr0rw+H9w+iPvP68BXq7ZxztNfM+GHjTodXwQVuISAyPAwfju4LZ/dczodm9bj/veWcM0rc8ncke91NBFPqcAlZLRuFMs7t/TnsUu7siRrD0P/MZMxM9dRrBOApJZSgUtICQszru7Xkmm/O4NT05J47JOVXPbCLJZvzvM6mki1U4FLSGpSP4aXr+/Nc1f3ZPPuA1z03Lc89Z+VFBTpBCCpPVTgErLMjGHdmjHt3jO4uEdznv9qHec/+w0/ZJzwdASRGkMFLiGvQWwU/3dld8bd1JfC4lKueHE2f/5gKXsLiryOJlKlVOBSY5x+ShL/ued0bhrUmjfnZnLu32cyfeVWr2OJVBkVuNQosdERPHhhJyb/diDxMRHc9O953PXOQnbsO+h1NJGAU4FLjdSzZQM+uvM07j3nFD5dmsM5T3/N+wt1PU6pWVTgUmNFRYRx9znt+Piu00htFMu9E37kxn//QLauxyk1hApcarxTkuOZdOtAHrqwE99v2Mm5T3/N2Fm6HqeEPhW41ArhYcaNg1rz+b2n0zu1IQ9NXcYVL81m7ba9XkcTOWkqcKlVUhrUZeyNfXj6yu6sy93H+c98y7NfrqGwWKfjS+hRgUutY2Zc1qvsepzndk7m6WmrOe+Zmbw5J5P8g8VexxPxmy7oILXelyu28vcvVrM0O4/46Agu753CdQNa0TYpzutoIoCuyCNyQs45Fm7azbhZGXy8JIeiEsdp7Rpx/YBUzurQmPAw8zqi1GIqcBE/5e49yIQfNvLW3I3k7CmgeUIdru3fiqv6tKBhbJTX8aQWUoGLVFBxSSlfrNjK2FmZzF6/g6iIMC7s1ozrB7Sie4sEr+NJLaICF6mE1Vv38sbsTCYvyCK/sITuLRK4vn8rLujWlJjIcK/jSQ2nAhcJgL0FRUxekM242Rmsy82nYWwUV/VpwTX9WpLSoK7X8aSGUoGLBJBzjlnrdjB2VgZfrChb8fDsjsmMHJDKoLREzPSlpwTO8Qo8woswIqHOzBiU1ohBaY3I3n2At+ZkMv6HTUxbvpW2SbFc178Vl/dOIT4m0uuoUoNpBC4SIAVFJXyyJIdxszNZtGk3sVHhXNqrOdcPSOWU5Hiv40kI0xSKSDVanLWbcbMzmfrjZgqLS+nfpiEjB6QypFMyEeE6AVoqRgUu4oGd+YVM+GETb87JJHv3AZrUi+Gafi0Z0bclSfHRXseTEKECF/FQSalj+sptjJudwTdrthMZbpzftSnXD0ilV8sEfekpJ6QvMUU8FB5mDOmUzJBOyazP3ccbczKZNC+LKYs207lZPa4f0IqLujenTpSOKRf/aQQu4pH8g8W8vzCbN2ZnsmrrXurXieSqPi24tl8rWibqmHL5SaWmUMwsA9gLlADFzrl0M2sITABSgQzgSufcrhPtRwUu8kvOOeZu2MkbszP5bNkWSp3jzPaNuW5AK85ol0SYFtKq9QJR4OnOue1HbHsS2Omce9zMHgAaOOfuP9F+VOAiJ7ZlTwFvf7+Rt+duZPu+g7RuFMtvz2jLpb2aE6mjV2qtqijwVcBg51yOmTUFZjjn2p9oPypwEf8UFpfy6dIcXv5mPUuz82ieUIffDm7LFekpREdonry2qWyBbwB2AQ54yTk3xsx2O+cSfP/dgF2HHh/12lHAKICWLVv2zszMrMzfQ6RWcc7x1aptPPvlWhZt2k1yvWhGn96WX/dtqS88a5HKFnhz51y2mTUGpgF3AlOPLGwz2+Wca3Ci/WgELnJynHN8t3YHz05fw/cbdtIoLopbTmvDtf1bERutg8lquuMVuF+Tas65bN/tNuB9oC+w1Td1gu92W+DiisiRzIxT2zVi4ugBTBjVnw5N6vHXT1dy6hPTeW76GvIKiryOKB4ot8DNLNbM4g/dB84FlgJTgZG+p40EplRVSBH5Sb82ibz5m35Mvm0gPVs24G+fr2bQ49N5etpqdu8v9DqeVKNyp1DMrA1lo24oO/Hnbefc/5pZIjARaAlkUnYY4c4T7UtTKCKBtzR7D/+cvob/LNtKbFQ41w9M5eZTW9MoTqfq1xQ6lV6khlu5JY/npq/l4yU5REeEcU2/Vow+vQ2N68V4HU0qSQUuUkusy93H81+tZcqizYSHGSP6tODWM9rSLKGO19HkJKnARWqZzB35vDBjHe8tyALg8l4p3DY4TafphyAVuEgtlb37AC/OWMeEHzZR4hwX92jG7Wem0TYpzuto4icVuEgttzWvgJe+Xs/b32dysLiUYd2acceZabRvoqsFBTsVuIgAsH3fQV75ZgNvzM4gv7CE8zo34Y6z0ujSvL7X0eQ4VOAi8jO78gt5/bsNvD4rg70FxZzdoTF3nJVGz5YnPKFaPKACF5Fj2nOgiHGzMnj1uw3s3l/Eae0acedZ7ejbuqHX0cRHBS4iJ7TvYDFvzcnk5W/Ws31fIf1aN+Sus9sxsG2iLvnmMRW4iPjlQGEJ73y/kZdmrmNr3kF6tUzgzrPaMbh9korcIypwEamQgqIS3p2fxYsz1pG9+wBdm9fnjrPSGNIxWVcJqmYqcBE5KYXFpXywMJvnZ6wlc8d+OjSJZ9TpbejbuiHNE+poVF4NVOAiUinFJaV8uHgzz01fy7rcfAAaxkbRpXl9ujavR9fm9enSvL5KvQocr8C1EryI+CUiPIxLe6ZwUffmLM7azdLsPSzJ3sPirD28uHY7JaVlg0GVevVRgYtIhYSHGT1bNvjZ8eIFRSWsyMk7XOpLsvN48ev1KvUqpgIXkUqLiQxXqXtABS4iVeJ4pb5yy16WZO0+XOovfb2e4iNKvXOzenRLqa9S94MKXESqTUxkOD1aJNCjRcLhbYdLPXuPr9h/XuoN6kbSpXl9lfoxqMBFxFM/L/VWwM9LfWnWHhZn71GpH4MKXESCTnkj9aVZZfPqxyr1Tk3r0aFpPB2b1qNNoziiIsq9dnvIUoGLSEjwp9SXbt7D699lUFhSCkBkuJHWOJ6OTeIPl3qHJvVIiq8ZF3xWgYtIyDpWqReVlLJhez4rcvJYuWUvK3LymLVuB5MXZh9+TqO4aDo2jadDk59KPa1x6I3WVeAiUqNEhodxSnI8pyTHc/ER23fmF7JySx4rcvay0lfuY2dnUlhcNlqPCDPSGsf9VOpN69GxaTxJcdFBO7euAheRWqFhbBQD2zZiYNtGh7cVl5SSsSOf5b5SX5GTx9wNO/lg0ebDz0mMjfKN0uMPl3pa4ziiI8K9+Gv8jApcRGqtiPAw0hrHk9Y4nou6Nzu8fff+wrKR+pa8w1Mxb8wpu5YolI3W2ybFHTGvXnbbOL56R+sqcBGRoyTUjWJA20QGtE08vK1stL7/p1LP2csPG3Yy5YjResPYqCPm1ctu0xrHERNZNaN1FbiIiB/KRutxpDWOY1i3n0bre/YXsWJL3uF59RU5ebw1N5OCorLReniY0aZRLC9c25u0xnGBzRTQvYmI1DL160bSv00i/dv8NFovKXVk7MhnZc5e3xRMHklxgT90UQUuIhJg4b458rZJcVzQrWmVvU9oHfQoIiKHqcBFREKU3wVuZuFmttDMPvI9bm1mc81srZlNMLOoqospIiJHq8gI/G5gxRGPnwD+7pxLA3YBNwcymIiInJhfBW5mKcAFwCu+xwacBUzyPWUscEkV5BMRkePwdwT+D+D3QKnvcSKw2zlX7HucBTQ/1gvNbJSZzTOzebm5uZXJKiIiRyi3wM1sGLDNOTf/ZN7AOTfGOZfunEtPSko6mV2IiMgx+HMc+CDgIjM7H4gB6gHPAAlmFuEbhacA2SfYh4iIBJg55/x/stlg4P8554aZ2bvAe8658Wb2IrDYOfevcl6fC2SeZNZGwPaTfG1VUq6KUa6KUa6Kqam5WjnnfjGFUZkzMe8HxpvZo8BC4NXyXnCsAP4ys3nOufSTfX1VUa6KUa6KUa6KqW25KlTgzrkZwAzf/fVA30AHEhER/+hMTBGREBVKBT7G6wDHoVwVo1wVo1wVU6tyVehLTBERCR6hNAIXEZEjqMBFREJU0Be4mbUws6/MbLmZLTOzu73OBGBmMWb2vZn96Mv1iNeZDjl65chgYWYZZrbEzBaZ2Tyv8xxiZglmNsnMVprZCjMbEASZ2vt+Tof+5JnZPV7nAjCze33/zy81s3fMLMbrTABmdrcv0zIvf1Zm9pqZbTOzpUdsa2hm08xsje+2QSDeK+gLHCgG/ss51wnoD9xuZp08zgRwEDjLOdcd6AGcZ2b9vY102NErRwaTM51zPYLsWN1ngM+ccx2A7gTBz845t8r3c+oB9Ab2A+97mwrMrDlwF5DunOsChAMjvE0FZtYFuIWyQ5u7A8PMLM2jOP8Gzjtq2wPAl865dsCXvseVFvQF7pzLcc4t8N3fS9k/rmMunFWdXJl9voeRvj+efyN89MqRcmJmVh84Hd+JaM65Qufcbk9D/dLZwDrn3MmexRxoEUAdM4sA6gKby3l+degIzHXO7fct7/E1cJkXQZxzM4GdR22+mLJVWyGAq7cGfYEfycxSgZ7AXI+jAIenKhYB24BpzrlgyPUPfr5yZDBxwOdmNt/MRnkdxqc1kAu87pt2esXMYr0OdZQRwDtehwBwzmUDfwM2AjnAHufc596mAmApcJqZJZpZXeB8oIXHmY6U7JzL8d3fAiQHYqchU+BmFge8B9zjnMvzOg+Ac67E9xE3Bejr+xjnmcquHFkNTnXO9QJ+RdlU2OleB6JsNNkLeME51xPIJ0AfbwPBd6Wri4B3vc4C4Ju7vZiyX3zNgFgzu9bbVOCcW0HZRWY+Bz4DFgElXmY6Hld27HZAPq2HRIGbWSRl5f2Wc26y13mO5vvI/RW/nPeqbodWjswAxgNnmdmb3kb6iW/0hnNuG2XzucGwFEMWkHXEp6dJlBV6sPgVsMA5t9XrID7nABucc7nOuSJgMjDQ40wAOOdedc71ds6dTtlVwlZ7nekIW82sKYDvdlsgdhr0Be67+s+rwArn3NNe5znEzJLMLMF3vw4wBFjpZSbn3H8751Kcc6mUfeye7pzzfHQEYGaxZhZ/6D5wLmUfez3lnNsCbDKz9r5NZwPLPYx0tF8TJNMnPhuB/mZW1/dv82yC4EtfADNr7LttSdn899veJvqZqcBI3/2RwJRA7LQyqxFWl0HAdcAS33wzwB+cc594FwmApsBYMwun7BfhROdcUB22F2SSgffL/s0TAbztnPvM20iH3Qm85ZuuWA/c6HEe4PAvuiHAaK+zHOKcm2tmk4AFlB0htpDgOX39PTNLBIqA2736MtrM3gEGA43MLAt4CHgcmGhmN1O2pPaVAXkvnUovIhKagn4KRUREjk0FLiISolTgIiIhSgUuIhKiVOAiIiFKBS61mpmlHrlqnEgoUYGLiIQoFbiIj5m18S1o1cfrLCL+CIUzMUWqnO9U+vHADc65H73OI+IPFbgIJFG2NsVlzrlgWgdF5IQ0hSICeyhbpOlUr4OIVIRG4CJQCFwK/MfM9jnngmkVO5HjUoGLAM65fN8FMab5Snyq15lEyqPVCEVEQpTmwEVEQpQKXEQkRKnARURClApcRCREqcBFREKUClxEJESpwEVEQtT/B/yHofrpRmsuAAAAAElFTkSuQmCC
+"
+>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Dans le deuxièmre graphique, on mesure le "silhouette score" qui correspond à un score de similiraté entre les membres d'un même cluster. On choisit K en fonction du score le plus élevé. Ici, le K optimal se situerai entre 2 et 5.
+<br>
+<br>De plus ample visualisations sur les scores et résultats des clusterisations sont disponible dans le rapport Power BI.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[19]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scores_df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;silhouette&quot;</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[19]:</div>
+
+
+
+
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
+<pre>&lt;AxesSubplot:xlabel=&#39;k&#39;&gt;</pre>
+</div>
+
+</div>
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedImage jp-OutputArea-output ">
+<img src="data:image/png;base64,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
+"
+>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Classe pour gérer les clusterisations après avoir refactoriser mon code pour moduler et réitérer plus facilement.
+<br>Ajout d'une option pour choisir le pays à clusteriser ou l'ensemble de l'Europe si pas de pays choisis.
+<br>Ajout d'une option pour affecter des poids aux features.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[20]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">ClustersHandler</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">df_stations</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">country</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">country</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">df_stations</span> <span class="o">=</span> <span class="n">df_stations</span><span class="p">[</span><span class="n">df_stations</span><span class="p">[</span><span class="s2">&quot;COUNTRY&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">country</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">df_stations</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;STATION&quot;</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;STATION&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_normalise</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+        <span class="n">normalised_df_stations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[[</span><span class="s2">&quot;STATION&quot;</span><span class="p">,</span> <span class="s2">&quot;COUNTRY&quot;</span><span class="p">,</span> <span class="s2">&quot;NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;LATITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;LONGITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;ELEVATION&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s2">&quot;STATION&quot;</span><span class="p">)</span>
+        <span class="c1"># effacement pour l&#39;aggregation des stats par mois sinon latitude longitude etc seront mensualises</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;COUNTRY&quot;</span><span class="p">,</span> <span class="s2">&quot;NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;LATITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;LONGITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;ELEVATION&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;MONTH&quot;</span><span class="p">)])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+        <span class="c1"># refusion avec les donnes stations dont lat long elevation normalise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">normalised_df_stations</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;STATION&quot;</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;STATION&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_scores</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_normalise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">column_to_not_normalise</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">,</span> <span class="s2">&quot;STATION&quot;</span><span class="p">,</span> <span class="s2">&quot;COUNTRY&quot;</span><span class="p">,</span> <span class="s2">&quot;NAME&quot;</span><span class="p">]</span>
+        <span class="n">column_to_normalise</span> <span class="o">=</span> <span class="p">[</span><span class="n">column</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">column_to_not_normalise</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+                            <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">column_to_normalise</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">_apply_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span><span class="nb">dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">weights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">*</span> <span class="n">weight</span>
+
+    <span class="k">def</span> <span class="nf">get_clusters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">list_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">k_clusters_min</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">k_clusters_max</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&#39;&#39;&#39;list_columns: nom des colonnes de niveau 1 dans la hiérarchie, le niveau 2 étant le numéro du mois</span>
+<span class="sd">        retourne un dataframe contenant les résultats des clusterisations&#39;&#39;&#39;</span>
+        <span class="c1"># init du df résultats avec les id des stations qui seront clusterises</span>
+        <span class="n">df_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[[</span><span class="s2">&quot;STATION&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># contiendra la liste de tuple des colonnes (niveau1, niveau2)</span>
+        <span class="n">list_columns_final</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">list_columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">list_columns_final</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">n_month</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
+                    <span class="n">list_columns_final</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">column</span><span class="p">,</span> <span class="n">n_month</span><span class="p">))</span>
+        <span class="c1"># initialisation du dictionnaire qui contiendra les scores des clusterisations pour chaque K</span>
+        <span class="n">k_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">k_clusters_min</span><span class="p">,</span> <span class="n">k_clusters_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">k_scores</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">k_range</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clusters_name</span><span class="si">}</span><span class="s2">_inertia&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clusters_name</span><span class="si">}</span><span class="s2">_silhouette&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+        <span class="c1"># plusieurs clusterisations en variant le K et ajout des résultats dans le df_results</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_range</span><span class="p">:</span>
+            <span class="n">K_means</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">list_columns_final</span><span class="p">])</span>  
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">list_columns_final</span><span class="p">])</span>     
+            <span class="n">name_colonne</span> <span class="o">=</span> <span class="n">k</span>
+            <span class="n">df_results</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">name_colonne</span><span class="p">]</span> <span class="o">=</span> <span class="n">K_means</span><span class="o">.</span><span class="n">labels_</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="c1"># Sum of squared distances of samples to their closest cluster center</span>
+            <span class="n">k_scores</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clusters_name</span><span class="si">}</span><span class="s2">_inertia&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">K_means</span><span class="o">.</span><span class="n">inertia_</span><span class="p">)</span>
+            <span class="c1"># Silhouete_score</span>
+            <span class="n">k_scores</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clusters_name</span><span class="si">}</span><span class="s2">_silhouette&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">silhouette_score</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">list_columns_final</span><span class="p">],</span> <span class="n">K_means</span><span class="o">.</span><span class="n">labels_</span><span class="p">))</span>
+        <span class="c1"># sauvegarde des scores en tant que membre de la classe et retour des clusterisations en output</span>
+        <span class="c1"># si des scores sont deja présent (créer durant la même session de clusterisation à partir de la même </span>
+        <span class="c1"># instance de la classe ClusterHandler), on les réunit</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_scores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">last_scores</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">k_scores</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_k_scores</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_scores</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">last_scores</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;outer&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_k_scores</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">k_scores</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>      
+        <span class="k">return</span> <span class="n">df_results</span>
+
+    <span class="k">def</span> <span class="nf">get_k_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_scores</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Fonction qui effectue un ensemble de clusterisations en utilisant des colonnes différentes. (54 clusterisations sont générés ici) <br> Enregistrement des résultats pour l'analyse sur Power BI.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[21]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_clusters</span><span class="p">():</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data/climat/clean_for_bi/ClimatFACT.csv&quot;</span><span class="p">)</span>
+    <span class="n">df_stations</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data/climat/clean_for_bi/StationDIM.csv&quot;</span><span class="p">)</span>
+
+    <span class="n">clustering</span> <span class="o">=</span> <span class="n">ClustersHandler</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">df_stations</span><span class="p">,</span> <span class="s2">&quot;France&quot;</span><span class="p">)</span>
+
+    <span class="n">clusters1</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">get_clusters</span><span class="p">(</span><span class="s2">&quot;Cluster_TEMP&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;TEMP&quot;</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">clusters1</span> <span class="o">=</span> <span class="n">clusters1</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">],</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;Cluster_TEMP&quot;</span><span class="p">)</span>
+
+    <span class="n">clusters2</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">get_clusters</span><span class="p">(</span><span class="s2">&quot;Cluster_TEMP+&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;TEMP&quot;</span><span class="p">,</span> <span class="s2">&quot;MIN&quot;</span><span class="p">,</span> <span class="s2">&quot;MAX&quot;</span><span class="p">,</span> <span class="s2">&quot;DEWP&quot;</span><span class="p">])</span>
+    <span class="n">clusters2</span> <span class="o">=</span> <span class="n">clusters2</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">],</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;Cluster_TEMP+&quot;</span><span class="p">)</span>
+
+    <span class="n">clusters3</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">get_clusters</span><span class="p">(</span><span class="s2">&quot;Cluster_WIND&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;WDSP&quot;</span><span class="p">,</span> <span class="s2">&quot;MXSPD&quot;</span><span class="p">])</span>
+    <span class="n">clusters3</span> <span class="o">=</span> <span class="n">clusters3</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">],</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;Cluster_WIND&quot;</span><span class="p">)</span>
+
+    <span class="n">clusters4</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">get_clusters</span><span class="p">(</span><span class="s2">&quot;Cluster_FRSHT&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;FOG&quot;</span><span class="p">,</span> <span class="s2">&quot;RAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;SNOW&quot;</span><span class="p">,</span> <span class="s2">&quot;HAIL&quot;</span><span class="p">,</span> <span class="s2">&quot;THUN&quot;</span><span class="p">])</span>
+    <span class="n">clusters4</span> <span class="o">=</span> <span class="n">clusters4</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">],</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;Cluster_FRSHT&quot;</span><span class="p">)</span>
+
+    <span class="n">clusters5</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">get_clusters</span><span class="p">(</span><span class="s2">&quot;Cluster_ALL&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;TEMP&quot;</span><span class="p">,</span> <span class="s2">&quot;MIN&quot;</span><span class="p">,</span> <span class="s2">&quot;MAX&quot;</span><span class="p">,</span> <span class="s2">&quot;DEWP&quot;</span><span class="p">,</span> <span class="s2">&quot;WDSP&quot;</span><span class="p">,</span> <span class="s2">&quot;MXSPD&quot;</span><span class="p">,</span> 
+                                        <span class="s2">&quot;FOG&quot;</span><span class="p">,</span> <span class="s2">&quot;RAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;SNOW&quot;</span><span class="p">,</span> <span class="s2">&quot;HAIL&quot;</span><span class="p">,</span> <span class="s2">&quot;THUN&quot;</span><span class="p">])</span>
+    <span class="n">clusters5</span> <span class="o">=</span> <span class="n">clusters5</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">],</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;Cluster_ALL&quot;</span><span class="p">)</span>
+
+    <span class="n">clusters6</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">get_clusters</span><span class="p">(</span><span class="s2">&quot;Cluster_ALL+GEO&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;TEMP&quot;</span><span class="p">,</span> <span class="s2">&quot;MIN&quot;</span><span class="p">,</span> <span class="s2">&quot;MAX&quot;</span><span class="p">,</span> <span class="s2">&quot;DEWP&quot;</span><span class="p">,</span> <span class="s2">&quot;WDSP&quot;</span><span class="p">,</span> <span class="s2">&quot;MXSPD&quot;</span><span class="p">,</span> 
+                <span class="s2">&quot;FOG&quot;</span><span class="p">,</span> <span class="s2">&quot;RAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;SNOW&quot;</span><span class="p">,</span> <span class="s2">&quot;HAIL&quot;</span><span class="p">,</span> <span class="s2">&quot;THUN&quot;</span><span class="p">,</span> <span class="s2">&quot;ELEVATION&quot;</span><span class="p">,</span> <span class="s2">&quot;LATITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;LONGITUDE&quot;</span><span class="p">])</span>
+    <span class="n">clusters6</span> <span class="o">=</span> <span class="n">clusters6</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">],</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;Cluster_ALL+GEO&quot;</span><span class="p">)</span>
+
+    <span class="n">all_clusters</span> <span class="o">=</span> <span class="p">[</span><span class="n">clusters1</span><span class="p">,</span> <span class="n">clusters2</span><span class="p">,</span> <span class="n">clusters3</span><span class="p">,</span> <span class="n">clusters4</span><span class="p">,</span> <span class="n">clusters5</span><span class="p">,</span> <span class="n">clusters6</span><span class="p">]</span>
+    <span class="n">final_df</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">right</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">,</span> <span class="s2">&quot;K&quot;</span><span class="p">],</span> 
+                                                    <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">),</span> <span class="n">all_clusters</span><span class="p">)</span>
+    <span class="n">final_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;data/climat/clean_for_bi/Clusters.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">k_scores</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">get_k_scores</span><span class="p">()</span>
+    <span class="n">k_scores</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;data/climat/clean_for_bi/k_scores.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>Fonction où j'effectue des clusterisations en attribuant des poids aux features.
+<br>Les poids sont des coefficients par lequel je multiplie les valeurs des colonnes correspondantes.
+<br>Comme dit plutôt, comme k-means est un algorithme basé sur les distances, en multipliant certains axes(dimensions/features) je multiplie leurs importances dans le calcul des distances total.
+<br>Ici, je donne 3 fois plus d'importance à la Température moyenne qu'au nombre de jours de neige par exemple.</em></strong></p>
+
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[22]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_optimal_cluster</span><span class="p">():</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data/climat/clean_for_bi/ClimatFACT.csv&quot;</span><span class="p">)</span>
+    <span class="n">df_stations</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data/climat/clean_for_bi/StationDIM.csv&quot;</span><span class="p">)</span>
+
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;TEMP&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;MIN&quot;</span><span class="p">:</span><span class="mf">2.5</span><span class="p">,</span> <span class="s2">&quot;MAX&quot;</span><span class="p">:</span><span class="mf">2.5</span><span class="p">,</span> <span class="s2">&quot;DEWP&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;WDSP&quot;</span><span class="p">:</span><span class="mf">1.5</span><span class="p">,</span> <span class="s2">&quot;MXSPD&quot;</span><span class="p">:</span><span class="mf">1.5</span><span class="p">,</span> 
+                <span class="s2">&quot;FOG&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;RAIN&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;SNOW&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;HAIL&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;THUN&quot;</span><span class="p">:</span><span class="mf">1.5</span><span class="p">,</span> <span class="s2">&quot;ELEVATION&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;LATITUDE&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;LONGITUDE&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">}</span>
+    
+    <span class="n">clustering</span> <span class="o">=</span> <span class="n">ClustersHandler</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">df_stations</span><span class="p">,</span> <span class="s2">&quot;France&quot;</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+    
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">get_clusters</span><span class="p">(</span><span class="s2">&quot;Cluster_ALL&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">weights</span><span class="o">.</span><span class="n">keys</span><span class="p">()],</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATION&quot;</span><span class="p">],</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;Cluster_ALL&quot;</span><span class="p">)</span>
+
+    <span class="n">clusters</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;data/climat/clean_for_bi/Clusters_opt.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><strong><em>De plus, l'attribution de ces poids peut être justifiée, une citation de Wikipédia concernant les différents climats :</em></strong> « la réunion des phénomènes calorifiques, aqueux, lumineux, aériens, électriques, etc. qui impriment à ce pays un caractère météorologique défini, différent de celui d'un autre pays, placé sous la même latitude et dans les mêmes conditions géologiques. Selon que l'un de ces phénomènes domine, on dit que le climat est chaud, froid ou tempéré, sec ou humide, calme ou venteux.
+On considère toutefois la chaleur comme exerçant la plus grande influence : viennent ensuite les quantités d'eau tombée dans les diverses saisons de l'année, l'humidité ou la sécheresse de l'air, les vents dominants, le nombre et la répartition des orages dans le cours de l'année; la sérénité ou la nébulosité de l'air; la nature du sol et celle de la végétation qui le recouvre, selon qu'elle est spontanée ou le résultat de la culture. »</p>
+
+</div>
 </div>
 </body>
 

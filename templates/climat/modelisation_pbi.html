@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block body %} 
+
+<div class="center">
+    <h1>Modélisation du rapport avec Power BI</h1>
+    <p>C'est la phase final qui va permettre de créer un rapport dynamique avec les données traitées et
+       les clusterisations des étapes précédentes.</p>  
+    <p>Le rapport contient 6 pages:</p>
+    <ol>
+        <li>Comparaison entre pays européens</li>
+        <li>Visualisation intra-pays</li>
+        <li>Un tableau statistique sur l'Europe</li>
+        <li>Différentes clusterisations de la France</li>
+        <li>Recherche du nombre de climats (clusters) optimal pour la France</li>
+        <li>Une clusterisation final</li>
+    </ol>
+    <br>
+    <h2>Schéma du modèle de données du rapport :</h2>
+    <img src="/static/images/model_BI.png">
+    <br>
+    <br>
+    <ul>
+        <li><b>ClimatFACT, StationDIM, Clusters, Cluster_final et k_scores</b> sont chargés depuis 5 CSV réspectives
+            préparés en amont.
+        </li>
+        <li><b>ClimatFACT, StationDIM, Clusters, Clusters_final</b> ont toutes en commun la colonne <i>STATION</i> qui permet de faire les jointures.
+            C'est une valeur qui sert d'identifiant aux stations, elle est unique dans la table 
+            <b>StationDIM</b> (qui est une table de type DIMENSION) et non dans les autres tables (qui sont des tables de FAIT).
+        </li>
+        <li><b>ClimatFACT, StationDIM, DateDIM</b> ont typiquement un schéma en étoile naturel. Une table de FAIT filtrée par 
+            une table de DIMENSION géographique <b>StationDIM</b> et une table de DIMENSION temporel <b>DateDIM</b>. Ces 3 tables 
+            permettent la création des 3 premières pages du rapport. 
+        </li>
+        <li><b>Temp_Selection et FRSHT_Selection</b> servent à éteindre un peu plus les capacités intéractives de Power BI.
+            Elles permettent à l'utilisateur de faire une sélection sur les températures et 
+            les types d'intempéries dans la 1er page du rapport.
+        </li>
+        <li><b>Clusters et Clusters_final</b> contiennet les numéros des clusters attribués à chaque station française
+            en fonction de K et des différentes clusterisations. Ces tables servent pour la page 4 et 6 du rapport respectivement 
+            en conjonction avec les autres tables.
+            Elles s'apparentent plus à des tables de FAIT mais la direction
+            des filtres avec la table <b>StationDIM</b> est bidirectionnelle. En effet, ceci permet que la séléction des clusters
+            se propagent jusqu'à la table <b>ClimatFACT</b>, permettant ainsi d'avoir des statistiques et mesures sur ces clusters.
+        </li>
+        <li><b>k_scores</b> contient les scores des clusterisations de la table <b>Clusters</b> en fonction de K. Elle est utlisé dans la page 5 du rapport. 
+            Elle se suffit à elle même et n'a pas vraiment besoin d'être liée aux autres tables dans mon rapport.</li>
+    </ul>
+    <br>
+    <p>Finalement, je crée le rapport en montrant les données sous la forme qui me semble la plus informatif possible,
+        en utilisant les différents outils pour l'analyse et la visualisations dont dispose Power BI.
+        J'ai utilisé le langage DAX à quelques reprises mais ce n'était pas indispensable.
+    </p>
+    <h3><a href="{{ url_for('cl_rapport_power_bi') }}">Voir le rapport</a></h3>
+
+</div>
+
+{% endblock %}

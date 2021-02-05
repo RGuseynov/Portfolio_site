@@ -21,11 +21,24 @@
       <li ><a href="{{ url_for('home') }}">Accueil</a></li>
       <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Marché Immobilier<span class="caret"></span></a>
         <ul class="dropdown-menu">
-          <li><a href="{{ url_for('data_exploration_page') }}">Exploration des données</a></li>
-          <li><a href="{{ url_for('map_departement_page') }}">Carte de prix par département</a></li>
-          <li><a href="{{ url_for('estimation') }}">Estimer un bien</a></li>
+          <li><a href="{{ url_for('immo_presentation') }}">Présentation</a></li>
+          <li><a href="{{ url_for('immo_data_exploration') }}">Exploration des données</a></li>
+          <li><a href="{{ url_for('immo_map_departement') }}">Carte de prix par département</a></li>
+          <li><a href="{{ url_for('immo_estimation') }}">Estimer un bien</a></li>
         </ul>
       </li>
+      <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Climat<span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li><a href="{{ url_for('cl_presentation') }}">Présentation</a></li>
+          <li><a href="{{ url_for('cl_traitement_donnees') }}">Traitement des données</a></li>
+          <li><a href="{{ url_for('cl_clusterisation') }}">Clusterisation</a></li>
+          <li><a href="{{ url_for('cl_modelisation_pbi') }}">Modélisation Power BI</a></li>
+          <li><a href="{{ url_for('cl_rapport_power_bi') }}">Rapport Power BI</a></li>
+        </ul>
+      </li>
+    </ul>
+    <ul class="nav navbar-nav navbar-right" >
+      <li><a href="{{ url_for('about') }}"><span class="glyphicon glyphicon-user"></span> À-propos</a></li>
     </ul>
   </div>
 </nav>
@@ -33,7 +46,9 @@
 {% block body %}{% endblock %}
 
 </body>
+
+<footer>
+{% block footer %}{% endblock %}
+</footer>
+
 </html>
-
-
-

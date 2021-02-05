@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block body %} 
+
+<div style="text-align: center;">
+    <iframe src="/climat/show_notebook/{{ data.notebook1_name }}" frameborder="0" height="{{ data.notebook1_height }}" width="90%" scrolling="no"></iframe>
+</div>
+<div class="center">
+    <h3><a href="{{ url_for('cl_modelisation_pbi') }}">Passer à la modélisation du rapport avec Power BI</a></h3>
+</div>
+
+{% endblock %}

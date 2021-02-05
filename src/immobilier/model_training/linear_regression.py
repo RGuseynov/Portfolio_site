@@ -4,7 +4,7 @@ import numpy as np
 from sklearn import linear_model
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, Normalizer
+from sklearn.preprocessing import StandardScaler, Normalizer, MinMaxScaler
 
 
 pd.set_option('display.float_format', lambda x: '%.5f' % x)
@@ -29,13 +29,24 @@ X = df[["surface_reelle_bati", "nombre_pieces_principales", "2019_median"]]
 Y = df["valeur_fonciere"]
 
 
-scaler = StandardScaler()
-scaler.fit(X)
-X = scaler.transform(X)
+# les methodes de normalisation de scikit learn ne normalise pas les colonnes independaments 
+# quand appliqué directement sur un dataframe pandas
+# utilisé:
+min_max_sclaer = preprocessing.MinMaxScaler()
+X_transformed = X.copy()
+X_transformed[X_transformed.columns] = min_max_scaler.fit_transform(X_transformed)
 
+# scaler = StandardScaler()
+# scaler.fit(X)
+# X = scaler.transform(X)
 # normaliser1 = Normalizer()
 # normaliser1.fit(X)
 # X = normaliser1.transform(X)
+
+# X = X.values #returns a numpy array
+# min_max_scaler = preprocessing.MinMaxScaler()
+# X_scaled = min_max_scaler.fit_transform(X)
+# X = pd.DataFrame(X_scaled)
 
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y)
 

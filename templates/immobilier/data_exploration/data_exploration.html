@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block body %}
+
+
+<div class="center">
+    <h1>Exploration des données</h1>
+    <p>Ci-dessous, un jupyter notebook qui explique la démarche</p>  
+</div>
+
+<div style="text-align: center;">
+    <iframe src="/immobilier/show_notebook/{{ data.notebook1_name }}" frameborder="0" height="{{ data.notebook1_height }}" width="90%" scrolling="no"></iframe>
+</div>
+
+<div class="center">
+    <h3>Le rapport généré, accessible avec le lien ci-dessous, peut servir de point de départ pour le traitement futur des données et/ou pour des analyse plus poussées. 
+        <br>
+        <br>
+        <a href="/immobilier/pandas_profiling?report={{ data.report1_name }}&height={{ data.report1_height }}" class='btn btn-primary'>Voir le résultat de cette première analyse automatique des données</a>
+    </h3>
+</div>
+
+{% endblock %}

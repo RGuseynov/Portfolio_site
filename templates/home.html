@@ -1,73 +1,22 @@
 {% extends "layout.html" %}
-
 {% block body %} 
 
 <div class="center">
-<h1>Etude du marché immobilier français</h1>
-<p>Ce projet est constitué de deux éléments :</p>
-<ul>
-    <li>Une cartographie du prix du m2 par département pour les appartements en France</li>
-    <li>Un estimateur de prix pour appartement</li>
-</ul>
-<p>L'ensemble du code du site et du projet est disponible sur <a href="https://github.com/RGuseynov/Portfolio_site">GitHub</a></p>
-<p>Le projet a été développé en Python avec Flask, Pandas, Scikit-learn et Folium</p>
-
-<h3>Données source : </h3>
+    <h1>Accueil</h1>
+    <p>Bienvenue sur mon site, il présente quelques-unes de mes réalisations personnels :</p>
     <ul>
-        <li><a href="https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/">DVF(Demandes de valeurs foncières) géolocalisées</a> 
-            contenant l'historique des transactions foncières depuis 2014</li>
-        <li><a href="https://france-geojson.gregoiredavid.fr/">GeoJSON de la France</a>
-            contenant la délimitation des départements</li>
-    </ul>  
-
-<h3>Etapes de traitement des données: </h3>
-    <ul>
-        <li>Exploration des données (notamment de leurs distributions)</li>
-        <li>Nettoyage/Filtrage (notamment des valeurs abérantes assez nombreuses), je garde les features (colonnes/dimensions) pértinentes pour la suite</li>
-        <li>Aggrégation des données (pour connaitre le prix du m2 pour chaque département pour chaque année)</li>
-        <li>Association de ces données au GeoJSON et génération de la carte de prix</li>
-        <li>Préparation et sauvegarde des données propres pour faire du machine learning</li>
+        <li><a href="{{ url_for('immo_presentation') }}">Marché Immobilier</a> : traitement/analyse de données, cartographie, estimateur de bien.
+            <br>Technos utilisées : Python (Pandas, Scikit-learn, Folium)</li>
+        <li><a href="{{ url_for('cl_presentation') }}">Climat</a> : traitement/analyse de données, clusterisation, rapport visuel.
+            <br>Technos utilisées : Python (Pandas, Scikit-learn) et Power BI</li>
     </ul>
-
-<h3>Machine Learning :</h3>
-<p>En utilisant la surface, le nombre de pièces et la géolocalisation du bien: entrainement d'un modèle de régression linéaire et d'un arbre de décision.</p>
-<ul>
-    <li>Pour la Régression linéaire : de part la corrélation non linéaire entre les features de géolocalisation et le prix du bien, il n'est pas possible de les utiliser tel quel.
-        Utilisation du prix médian des départements comme feature de géolocalisation. Standardisation des données.
-    </li>
-    <li>Pour l'arbre de décision : utlisation de différentes combinaisons de features de géolocalisation 
-    parmis le département, le code postal, le code commune et le duo longitude/latitude. 
-    Il n'y a pas de grande différence, hormis le fait que le code département a peu d'impact sur le modèle 
-    étant donné qu'on dispose de "versions" plus précise de cette feature que sont le code postal et le code commune.
-    L'utilisation du duo longitude/latitude n'augmente pas la précision du modèle.
-    </li>
-</ul>
-<p>Dans tout les cas, la surface, le nombre de pièces et la géolocalisation ne sont pas suffisants à eux seuls pour
-estimer correctement un bien. Beaucoup d'autres variables dont on ne dispose pas peuvent avoir des impacts significatifs sur le prix
-(ancienneté, état du bien, chauffage, étage...). On pourrait aussi penser à croiser la localisation des biens avec d'autres données geospatiales (densité des zones, axe routier, proximité transport/commerce, distance de la mer, altitude...).
-</p>
-
-<h3>Résultats :</h3>
-<p>Mauvais pour le modèle de régression linéaire et relativement correcte pour l'arbre de décision en considérant le faible nombre de features.</p>
-<p>Le pourcentage d'écart moyen entre le prix réel et le prix estimé est de 62% pour la régression linéaire et de 28% pour l'arbre de décision.</p>
-<table>
-    <tr>
-      <th>Métrique</th>
-      <th>Régression Linéaire</th>
-      <th>Arbre de décision</th>
-    </tr>
-    <tr>
-      <td>Moyenne des erreurs absolus</td>
-      <td>82852 €</td>
-      <td>45747 €</td>
-    </tr>
-    <tr>
-      <td>Moyenne des pourcentages des erreurs absolus</td>
-      <td>62%</td>
-      <td>28%</td>
-    </tr>
-  </table>
-
 </div>
 
+{% endblock %}
+
+{% block footer %} 
+    <div class="center">
+    <p style="text-align: center;">Le site est codé en Python (Flask). Le code des projets et du site est disponible sur mon GitHub
+        <br><a href="https://github.com/RGuseynov/Portfolio_site"><img src="/static/images/logos/github.png" width="50px" height="50px"></a></p>
+    </div>
 {% endblock %}

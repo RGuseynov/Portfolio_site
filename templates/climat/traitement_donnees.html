@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block body %} 
+
+<div class="center">
+    <h1>Traitement des données</h1>
+    <p>Les spécifications des données sources peuvent être consultés <a href= "{{ url_for('cl_specifications_donnees') }}">ici</a></p>
+    <p>Ci-dessous un Jupyter Notebook qui explique la démarche </p>
+</div>
+<div style="text-align: center;">
+    <iframe src="/climat/show_notebook/{{ data.notebook1_name }}" frameborder="0" height="{{ data.notebook1_height }}" width="90%" scrolling="no"></iframe>
+</div>
+<div class="center">
+    <h3><a href="{{ url_for('cl_clusterisation') }}">Passer à la clusterisation</a></h3>
+</div>
+
+{% endblock %}

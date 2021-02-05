@@ -35,3 +35,7 @@ table {
 .error{
   color: crimson;
 }
+
+.form-control{
+  width:20%
+}

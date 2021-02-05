@@ -1,0 +1,29 @@
+
+Remarques sur les données et l'amélioration des statistiques
+
+Il est aussi nécessaire de prendre en compte que la répartition non homogène des stations de mesures sur l'ensemble d'un pays et à fortiori dans l'ensemble de l'Europe amène un biais dans les calculs. 
+
+exemple simple:  
+
+	-un département A possède 1 station qui mesure une température annuelle moyenne de 10 degré.
+
+	-un département B de même surface que le département A possède 2 stations de mesures, la station B1 mesure 12 degré, la station B2 mesure aussi 12 degré.
+
+La moyenne des températures mesurées sur ces 2 départements serait de 11.33 degré alors que la température moyenne réel est de 11 degré.
+
+Pour remédier à cela, on pourrait découper les territoires en surfaces de terrains équivalents, aggréger les données sur ces territoires pour seulement ensuite aggréger de manière national et européenne. 
+
+Si on voudrait aller encore plus loin dans la précision, on pourrait affecter aux stations de mesures une portée en kilomètre. Vérifier que l'ensemble d'un territoire soit couvert. Pour les stations dont leurs zones de portée se chevauchent avec d'autres stations, diminuer l'influence individuel des mesures de ces stations proportionnelement à la surface des chevauchements.
+exemple simple:
+
+	-station A et B se chevauchent.
+
+	-station A couvre 75% de sa zone seul et 25% en commun avec la station B.
+
+	-station B couvre aussi 75% de sa zone seul et 25% en commun avec la station A.
+
+L'influence des mesures de ces 2 stations à l'échelle national devraient être de 0.75 + 0.25 / 2 = 0.87.5   
+
+La formule général pour chaque station serait de :  surface_couverte_seul + l'ensemble des sommes de (surface en commun avec d'autres stations / nombre de stations se chevauchant)
+
+Au final, au lieu de faire une moyenne national classique, on ferait une moyenne national pondérée grâce aux coéfficients de chaque station. On aurait ainsi une moyenne plus représentatif de la réalité.
