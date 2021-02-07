@@ -26,15 +26,10 @@ class InferenceForm(FlaskForm):
 
 # inference fonction, parameters have passed form filters before reaching this function
 # still user can input inexistant code postal (verification could be implimented from flat file or db)
-def make_inference(type_bien, surface, nb_pieces, code_postal):
-    if type_bien == "appartement":
-        with open("ml_models/tree_appartement.pkl", "rb") as file:
-            tree = pickle.load(file)
-        prediction = tree.predict([[surface, nb_pieces, code_postal]])
-    else:
-        with open("ml_models/tree_maison.pkl", "rb") as file:
-            tree = pickle.load(file)
-        prediction = tree.predict([[surface, nb_pieces, code_postal]])
+def make_inference(type_bien: str, surface: int, nb_pieces: int, code_postal: int):
+    with open(f"ml_models/tree_{type_bien}.pkl", "rb") as file:
+        tree = pickle.load(file)
+    prediction = tree.predict([[surface, nb_pieces, code_postal]])
     return prediction[0]
 
 
