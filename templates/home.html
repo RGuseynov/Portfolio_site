@@ -7,15 +7,20 @@
     <ul>
         <li><a href="{{ url_for('immo_presentation') }}">Marché Immobilier</a> : traitement/analyse de données, cartographie, estimateur de bien.
             <br>Technos utilisées : Python (Pandas, Scikit-learn, Folium)</li>
+            <br>
         <li><a href="{{ url_for('cl_presentation') }}">Climat</a> : traitement/analyse de données, clusterisation, rapport visuel.
             <br>Technos utilisées : Python (Pandas, Scikit-learn) et Power BI</li>
-    </ul>
+            <br>
+        <li><a href="{{ url_for('tr_presentation') }}">Trading</a> : ETL, analyse de données, features engineering, développement de modèles prédictives, solution sur le cloud.
+            <br>Technos utilisées : Python (Pandas, Numpy, Matplotlib, Scikit-learn, XGBoost, Keras, Ta-lib, Backtesting, SDK azure-ml, Pyodbc), Azure Machine Learning,
+        Azure SQL Server, Azure Data Factory, Azure Function, Azure Key Vault</li>
+</ul>
 </div>
 {% endblock %}
 
 {% block footer %} 
     <div class="center">
     <p style="text-align: center;">Le site est codé en Python (Flask). Le code des projets et du site est disponible sur mon GitHub.
-        <br><a href="https://github.com/RGuseynov/Portfolio_site"><img src="/static/images/logos/github.png" width="50px" height="50px"></a></p>
+        <br><a href="https://github.com/RGuseynov/Portfolio_site" target="_blank"><img src="/static/images/logos/github.png" width="50px" height="50px"></a></p>
     </div>
 {% endblock %}

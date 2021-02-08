@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block body %} 
+
+<div class="center">
+<h1>Prédiction sur le cours d'actifs boursiers</h1>
+
+<p>Ce projet a deux objectifs majeurs : </p>
+<ul>
+    <li>Développer des modèles prédictives de façon hybride, en local et sur le cloud.</li>
+    <li>Déployer une solution complète sur le cloud, de la récupération des données jusqu'à l'utilisation
+        final des modèles entraînés.</li>
+</ul>
+
+<h3>Données sources : </h3>
+<ul>
+    <li>
+        <a href="https://www.kaggle.com/mczielinski/bitcoin-historical-data" target="_blank">Kaggle</a> : historique
+        de prix du bitcoin à la granularité horaire depuis 2012.
+    </li>
+    <li>
+        <a href="https://www.alphavantage.co/" target="_blank">Alpha Vantage</a> : API où j'ai récupérer l'historique 
+        de prix des 500 entreprises américaines les mieux côtés (S&P500)
+        à la granularité horaire (avec seulement 2 ans d'historique par contre).
+    </li>
+</ul>
+
+<h3>Étapes du projet :</h3>
+<ul>
+    <li>Développement d'une base de données Azure SQL Serveur et mise en place d'un Azure Key Vault 
+        pour stocker les crédentials de manière sécurisé dans le contexte d'Azure.
+    </li>
+    <li>Mise en place de process ETL avec Azure Data Factory pour remplir la base de données depuis l'API Alpha Vantage.</li>
+    <li>Configuration de l'espace de travail Azure Machine Learning (donnée source/compute/environnement python).</li>
+    <li>Traitement et features engineering des données (création de centaines de nouvelles features).</li>
+    <li>Développement de modèles de machine learning de manière hybride (local et cloud).</li>
+    <li>Évaluation et backtesting des modèles.</li>
+    <li>Développement et deploiement d'une Azure Function qui récupère les denièrs prix et effectue des prédictions 
+        toutes les heures et d'une page Web pour afficher les dernières prédictions.
+    </li>
+    <li>Rédaction du rapport.</li>
+</ul>
+
+<h3>Résultats :</h3>
+<p>Après avoir globalement remplis mes objectifs hormis celui de devenir le nouveau loup de Wall Street, 
+    j'ai mis le projet en stand-by et les ressources Azure sont décommissionnées. 
+    <br>
+    <a href="https://github.com/RGuseynov/Trading_AML" target="_blank" style="margin-right: 20px;"><img src="/static/images/logos/github.png" width="50px" height="50px"></a>
+    <a href="https://github.com/RGuseynov/Trading_AML "target="_blank">Accéder au répertoire principal du projet</a>
+    <br>
+    <a href="https://github.com/RGuseynov/Trading_AzureFunction" target="_blank" style="margin-right: 20px;"><img src="/static/images/logos/github.png" width="50px" height="50px"></a>
+    <a href="https://github.com/RGuseynov/Trading_AzureFunction" target="_blank">Accéder au répertoire de l'Azure Function</a>
+    <br>
+    <a href="https://github.com/RGuseynov/Trading_WebApp" target="_blank" style="margin-right: 20px;"><img src="/static/images/logos/github.png" width="50px" height="50px"></a>
+    <a href="https://github.com/RGuseynov/Trading_WebApp" target="_blank">Accéder au répertoire de la page Web</a>
+    <br>
+    <a href="{{ url_for('tr_rapport') }}" style="margin-right: 20px;"><img src="/static/images/logos/rapport.jpg" width="50px" height="50px"></a>
+    <a href="{{ url_for('tr_rapport') }}"><b>Consulter le rapport</b></a>
+</p>
+
+{% endblock %}

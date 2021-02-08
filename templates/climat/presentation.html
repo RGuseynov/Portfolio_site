@@ -2,26 +2,25 @@
 {% block body %} 
 
 <div class="center">
-<h1>Etude sur le climat européen</h1>
+<h1>Étude sur le climat européen</h1>
 
 <p>Le but de ce projet est de faire une étude statistique sur le climat européen et 
     plus particulièrement français à partir de données météorologiques et de faire une analyse visuel.</p>
 <p>Le traitement des données et le machine learning sont effectués en Python avec Pandas et Scikit-learn.
     <br>L'analyse visuel et le compte rendu est effectué avec Power BI.</p>
 
-<h3>Données : </h3>
-<p><a href="https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc%3AC00516/html#">
-    Données mondiaux journalier provenant de stations météorologiques</a></p>
-La source met à disposition des données depuis 1929 avec les données les plus complètes à partir 
+<h3>Données sources : </h3>
+<p><a href="https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc%3AC00516/html#" target="_blank">
+    Mesures journalières provenant de stations météorologiques au niveau mondial</a> : la source met à disposition des données depuis 1929 avec les données les plus complètes à partir 
 de 1973. Dans le cadre de ce projet, je me limiterai aux 20 dernières années.
  </p>
 
-<h3>Etapes du projet :</h3>
+<h3>Étapes du projet :</h3>
 <ul>
-    <li><a href="{{ url_for('cl_traitement_donnees') }}">Traitement des données</a> en vue de la création du rapport et pour du machine learning</li>
-    <li><a href="{{ url_for('cl_clusterisation') }}">Clusterisation</a> des données pour déterminer les différents climats en France</li>
-    <li><a href="{{ url_for('cl_modelisation_pbi') }}">Modélisation</a> d'un rapport visuel avec Power BI</li>
+    <li><a href="{{ url_for('cl_traitement_donnees') }}">Traitement des données</a> en vue de la création du rapport et pour du machine learning.</li>
+    <li><a href="{{ url_for('cl_clusterisation') }}">Clusterisation</a> des données pour déterminer les différents climats en France.</li>
+    <li><a href="{{ url_for('cl_modelisation_pbi') }}">Modélisation</a> d'un rapport visuel avec Power BI.</li>
 </ul>
-<p><a href="{{ url_for('cl_rapport_power_bi') }}">Voir le rapport</a></p>
+<h3><a href="{{ url_for('cl_rapport_power_bi') }}">Accéder au rapport</a></h3>
 
 {% endblock %}

@@ -145,3 +145,13 @@ def cl_rapport_power_bi():
 def cl_show_notebook(notebook):
     return render_template(f'climat/notebooks/{notebook}.html')
 
+
+@app.route('/trading/presentation')
+def tr_presentation():
+    return render_template('trading/presentation.html')
+
+@app.route('/trading/rapport')
+def tr_rapport():
+    return render_template('trading/rapport.html')
+
+

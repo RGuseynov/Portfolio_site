@@ -2,29 +2,29 @@
 {% block body %} 
 
 <div class="center">
-<h1>Etude du marché immobilier français</h1>
+<h1>Étude du marché immobilier français</h1>
 <p>Ce projet est constitué de deux éléments :</p>
 <ul>
-    <li><a href="{{ url_for('immo_map_departement') }}">Une cartographie</a> du prix du m2 par département</li>
-    <li><a href="{{ url_for('immo_estimation') }}">Un estimateur</a> de prix pour un bien immobilier</li>
+    <li><a href="{{ url_for('immo_map_departement') }}">Une cartographie</a> du prix du m2 par département.</li>
+    <li><a href="{{ url_for('immo_estimation') }}">Un estimateur</a> de prix pour un bien immobilier.</li>
 </ul>
-<p>Le projet a été développé en Python avec Pandas, Scikit-learn et Folium</p>
+<p>Le projet a été développé en Python avec Pandas, Scikit-learn et Folium.</p>
 
-<h3>Données source : </h3>
+<h3>Données sources : </h3>
     <ul>
-        <li><a href="https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/">DVF (Demandes de valeurs foncières) géolocalisées</a> 
-            contenant l'historique des transactions foncières depuis 2014</li>
-        <li><a href="https://france-geojson.gregoiredavid.fr/">GeoJSON de la France</a>
-            contenant la délimitation des départements</li>
+        <li><a href="https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/" target="_blank">DVF (Demandes de valeurs foncières) géolocalisées</a> 
+            : l'historique des transactions foncières depuis 2014.</li>
+        <li><a href="https://france-geojson.gregoiredavid.fr/" target="_blank">GeoJSON de la France</a>
+            : délimitations des départements.</li>
     </ul>  
 
-<h3>Etapes de traitement des données: </h3>
+<h3>Étapes de traitement des données: </h3>
     <ul>
-        <li><a href="{{ url_for('immo_data_exploration') }}">Exploration des données</a> (notamment de leurs distributions)</li>
-        <li>Nettoyage/Filtrage (notamment des valeurs abérantes assez nombreuses), je garde les features (colonnes) pértinentes pour la suite</li>
-        <li>Aggrégation des données (pour connaitre le prix du m2 pour chaque département pour chaque année)</li>
-        <li>Association de ces données au GeoJSON et génération de la carte de prix</li>
-        <li>Préparation et sauvegarde des données propres pour faire du machine learning</li>
+        <li><a href="{{ url_for('immo_data_exploration') }}">Exploration des données</a> (notamment de leurs distributions).</li>
+        <li>Nettoyage/Filtrage (notamment des valeurs abérantes assez nombreuses), je garde les features (colonnes) pértinentes pour la suite.</li>
+        <li>Aggrégation des données (pour connaitre le prix du m2 pour chaque département pour chaque année).</li>
+        <li>Association de ces données au GeoJSON et génération de la carte de prix.</li>
+        <li>Préparation et sauvegarde des données propres pour faire du machine learning.</li>
     </ul>
 
 <h3>Machine Learning :</h3>
@@ -67,7 +67,7 @@ estimer correctement un bien. Beaucoup d'autres variables dont on ne dispose pas
     </tr>
   </table>
   <br>
-  <p><a href="{{ url_for('immo_estimation') }}">Tester l'estimateur</a></p>
+  <h3><a href="{{ url_for('immo_estimation') }}">Tester l'estimateur</a></h3>
 </div>
 
 {% endblock %}
